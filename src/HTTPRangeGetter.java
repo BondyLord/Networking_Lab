@@ -75,19 +75,13 @@ public class HTTPRangeGetter implements Runnable {
         Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
 
         if ( resCode == HttpURLConnection.HTTP_OK){
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(httpConnection.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
+            byte[] data = new byte[CHUNK_SIZE];
             Utilities.Log(MODULE_NAME,"getting data from request");
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
+            httpConnection.getInputStream().read(data);
+            Chunk chunk = new Chunk(data, startRange, CHUNK_SIZE);
+            outQueue.add(chunk);
             return 1;
         }else{
-
             Utilities.Log(MODULE_NAME,"houston we have a problem");
             Utilities.Log(MODULE_NAME,"terminating....");
             return 0;
