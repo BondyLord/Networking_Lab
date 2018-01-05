@@ -1,4 +1,12 @@
+
+
+import Utill.Utilities;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -7,6 +15,8 @@ import java.util.concurrent.BlockingQueue;
  * It supports downloading a range of data, and limiting the download rate using a token bucket.
  */
 public class HTTPRangeGetter implements Runnable {
+
+    static final String MODULE_NAME = "HTTPRangeGetter";
     static final int CHUNK_SIZE = 4096;
     private static final int CONNECT_TIMEOUT = 500;
     private static final int READ_TIMEOUT = 2000;
@@ -26,8 +36,62 @@ public class HTTPRangeGetter implements Runnable {
         this.tokenBucket = tokenBucket;
     }
 
+
     private void downloadRange() throws IOException, InterruptedException {
-        //TODO
+
+        long startRange = this.range.getStart();
+        long endRange;
+        int downloadResponse;
+        long numberOfNeededChunks= (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
+        URL url = new URL(this.url);
+        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+        httpConnection.setRequestMethod("GET");
+        httpConnection.setReadTimeout(READ_TIMEOUT);
+        httpConnection.setConnectTimeout(CONNECT_TIMEOUT);
+
+        Utilities.Log(MODULE_NAME,"start downloading in "
+                + numberOfNeededChunks
+                + "iterations");
+
+        for( int i = 0; i < numberOfNeededChunks; i++){
+            startRange += (i * CHUNK_SIZE);
+            endRange = startRange + CHUNK_SIZE - 1;
+            downloadResponse = downloadData(startRange, endRange, httpConnection);
+            if (downloadResponse == 0 ){
+                // In the case response code is not 200 (OK)
+                return;
+            }
+        }
+    }
+
+    private int downloadData(long startRange, long endRange, HttpURLConnection httpConnection) throws IOException {
+        String rangRequestProperty;
+        int resCode;
+        rangRequestProperty = String.format("bytes=%d-%d", startRange, endRange);
+        httpConnection.setRequestProperty("Range", rangRequestProperty);
+
+        Utilities.Log(MODULE_NAME,"range request - " + rangRequestProperty);
+        resCode = httpConnection.getResponseCode();
+        Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
+
+        if ( resCode == HttpURLConnection.HTTP_OK){
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(httpConnection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            Utilities.Log(MODULE_NAME,"getting data from request");
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+            return 1;
+        }else{
+
+            Utilities.Log(MODULE_NAME,"houston we have a problem");
+            Utilities.Log(MODULE_NAME,"terminating....");
+            return 0;
+        }
     }
 
     @Override
@@ -35,7 +99,7 @@ public class HTTPRangeGetter implements Runnable {
         try {
             this.downloadRange();
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            Utilities.ErrorLog(MODULE_NAME, e.getMessage());
             //TODO
         }
     }

@@ -17,7 +17,7 @@ class DownloadableMetadata {
         this.filename = getName(url);
         this.metadataFilename = getMetadataName(filename);
         //TODO
-    }}
+    }
 
     private static String getMetadataName(String filename) {
         return filename + ".metadata";
