@@ -52,7 +52,8 @@ public class IdcDm {
         //TODO
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         int fileSize = getFileSize(url);
-        int chunkQueueSize = fileSize / HTTPRangeGetter.CHUNK_SIZE;
+        int chunkQueueSize = (int) Math.ceil((double)fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
+
         BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
         DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
         FileWriter fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
@@ -65,12 +66,16 @@ public class IdcDm {
         rateLimiterThread.start();
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(numberOfWorkers);
-        int initialDelay = 0;
-        int period = 1;
-        //<TODO give real ranges>
-        Range range = new Range(0L, 100L);
-        HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
-        executor.scheduleAtFixedRate(httpRangeGetter, initialDelay, period, TimeUnit.SECONDS);
+        long startRange = 0L;
+        long rangeChunkSize = fileSize / numberOfWorkers;
+        long endRange = rangeChunkSize;
+        for (int i = 0; i < numberOfWorkers; i++){
+            startRange  += rangeChunkSize;
+            endRange += rangeChunkSize;
+            Range range = new Range(startRange, endRange);
+            HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
+            executor.execute(httpRangeGetter);
+        }
 
         // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
         executor.shutdown();
