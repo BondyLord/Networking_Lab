@@ -1,10 +1,14 @@
+import Utill.Utilities;
 
 import java.io.IOException;
-import java.net.*;
-import java.util.Queue;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.concurrent.*;
 
 public class IdcDm {
+    static final String MODULE_NAME = "IdcDm";
 
     /**
      * Receive arguments from the command-line, provide some feedback and start the download.
@@ -49,49 +53,69 @@ public class IdcDm {
      * @param maxBytesPerSecond limit on download bytes-per-second
      */
     private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) {
+        // Initiate the file's metadata, and iterate over missing ranges. For each:
         //TODO
+        String downloadStatus = "failed";
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         int fileSize = getFileSize(url);
-        int chunkQueueSize = (int) Math.ceil((double)fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
+        int chunkQueueSize = (int) Math.ceil((double) fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
+        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
 
         BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
         DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
         FileWriter fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
         Thread fileWriterThread = new Thread(fileWriter);
+        Utilities.Log(MODULE_NAME, "starting fileWriterThread");
         fileWriterThread.start();
 
         TokenBucket tokenBucket = new TokenBucket();
         RateLimiter rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
         Thread rateLimiterThread = new Thread(rateLimiter);
+        Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
         rateLimiterThread.start();
 
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(numberOfWorkers);
+        ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
         long startRange = 0L;
         long rangeChunkSize = fileSize / numberOfWorkers;
         long endRange = rangeChunkSize;
-        for (int i = 0; i < numberOfWorkers; i++){
-            startRange  += rangeChunkSize;
-            endRange += rangeChunkSize;
+        //<TODO this code is duplicate (implemented in HTTPRangeGetter) - we should decide where it needs to be implemented>
+        for (int i = 0; i < numberOfWorkers; i++) {
             Range range = new Range(startRange, endRange);
+            startRange += rangeChunkSize;
+            endRange += rangeChunkSize;
             HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
-            executor.execute(httpRangeGetter);
+            Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
+            Utilities.Log(MODULE_NAME, "startRange: " + startRange);
+            Utilities.Log(MODULE_NAME, "endRange: " + endRange);
+            httpRangeGetterTPExecutor.execute(httpRangeGetter);
         }
-
+        Utilities.Log(MODULE_NAME, "Starting: Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket");
         // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
-        executor.shutdown();
         try {
-            while (!executor.awaitTermination(24L, TimeUnit.HOURS)) {
+            httpRangeGetterTPExecutor.shutdown();
+            while (!httpRangeGetterTPExecutor.awaitTermination(24L, TimeUnit.HOURS)) {
                 System.out.println("Not yet. Still waiting for termination");
             }
-            chunkQueue.put(new Chunk(new byte[0], 0, 0));
+            // -1 offset in a chunk marks end of queue
+            chunkQueue.put(new Chunk(new byte[0],-1,0));
             tokenBucket.terminate();
+            Utilities.Log(MODULE_NAME, "Finished: Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket");
 
             // 3. Join the FileWriter and RateLimiter
+            Utilities.Log(MODULE_NAME, "Starting: Join the FileWriter and RateLimiter");
             fileWriterThread.join();
             rateLimiterThread.join();
+            Utilities.Log(MODULE_NAME, "Finished: Join the FileWriter and RateLimiter");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        // Finally, print "Download succeeded/failed" and delete the metadata as needed.
+        // <TODO choose how we know a download is successful>
+        downloadStatus = "succeeded";
+        System.out.println("Download " + downloadStatus);
+        // <TODO choose how we know delete the metadata is needed>
+        downloadableMetadata.delete();
     }
 
 
