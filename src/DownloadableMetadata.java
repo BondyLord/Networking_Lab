@@ -1,3 +1,6 @@
+import java.io.File;
+import java.util.List;
+
 /**
  * Describes a file's metadata: URL, file name, size, and which parts already downloaded to disk.
  *
@@ -11,6 +14,9 @@ class DownloadableMetadata {
     private final String metadataFilename;
     private String filename;
     private String url;
+    private int size;
+    //<TODO decide about a data structure for the ranges>
+    private List<Range> ranges;
 
     DownloadableMetadata(String url) {
         this.url = url;
@@ -37,10 +43,29 @@ class DownloadableMetadata {
 
     boolean isCompleted() {
         //TODO
+        if (this.size == IdcDm.getFileSize(url)){
+            return true;
+        }
+        return false;
     }
 
     void delete() {
         //TODO
+        try{
+
+            File file = new File(metadataFilename);
+
+            if(file.delete()){
+                System.out.println(file.getName() + " is deleted!");
+            }else{
+                System.out.println("Delete operation is failed.");
+            }
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
+        }
     }
 
     Range getMissingRange() {

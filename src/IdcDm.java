@@ -76,12 +76,14 @@ public class IdcDm {
 
         ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
         long startRange = 0L;
-        long rangeChunkSize = fileSize / numberOfWorkers;
-        long endRange = rangeChunkSize;
+        long rangeChunkSize = (int) Math.ceil((double) (fileSize / numberOfWorkers));
+        long endRange = rangeChunkSize - 1;
+        Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
+
         //<TODO this code is duplicate (implemented in HTTPRangeGetter) - we should decide where it needs to be implemented>
         for (int i = 0; i < numberOfWorkers; i++) {
             Range range = new Range(startRange, endRange);
-            startRange += rangeChunkSize;
+            startRange = endRange + 1;
             endRange += rangeChunkSize;
             HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
             Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
@@ -111,15 +113,15 @@ public class IdcDm {
         }
 
         // Finally, print "Download succeeded/failed" and delete the metadata as needed.
-        // <TODO choose how we know a download is successful>
-        downloadStatus = "succeeded";
+        if (downloadableMetadata.isCompleted()){
+            downloadStatus = "succeeded";
+            downloadableMetadata.delete();
+        }
         System.out.println("Download " + downloadStatus);
-        // <TODO choose how we know delete the metadata is needed>
-        downloadableMetadata.delete();
     }
 
 
-    private static int getFileSize(String urlString) {
+    protected static int getFileSize(String urlString) {
         URL url = null;
         URLConnection conn = null;
         try {

@@ -11,8 +11,6 @@ import java.util.concurrent.BlockingQueue;
  */
 public class FileWriter implements Runnable {
 
-    //<TODO give a real name for file>
-    private static final String FILE_NAME = "file name";
     private final BlockingQueue<Chunk> chunkQueue;
     private DownloadableMetadata downloadableMetadata;
 
@@ -23,7 +21,10 @@ public class FileWriter implements Runnable {
 
     private void writeChunks() throws IOException {
         //TODO
-        FileOutputStream out = new FileOutputStream(FILE_NAME);
+        String fileName = downloadableMetadata.getFilename();
+        FileOutputStream outFile = new FileOutputStream(fileName);
+        String fileMetadataName = downloadableMetadata.getFilename();
+        FileOutputStream outMetadataFile = new FileOutputStream(fileName);
         try {
             synchronized (chunkQueue) {
                 while (!chunkQueue.isEmpty()) {
@@ -33,13 +34,17 @@ public class FileWriter implements Runnable {
                                 "end of data reached.");
                         break;
                     }
-                    out.write(chunk.getData());
+                    outFile.write(chunk.getData());
                     //<TODO write to metaData>
+                    Range range = new Range(chunk.getOffset(), (long) chunk.getSize_in_bytes());
+                    downloadableMetadata.addRange(range);
                 }
+                outFile.close();
+                outMetadataFile.close();
                 //<TODO choose sleep time>
                 Thread.sleep(100);
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }
