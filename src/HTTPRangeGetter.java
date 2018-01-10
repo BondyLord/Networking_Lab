@@ -103,12 +103,13 @@ public class HTTPRangeGetter implements Runnable {
                     //in = httpConnection.getInputStream();
                 	
                     //dataSize = in.read(data);
-                    startRange += dataSize;
+                    
                     endRange = startRange + CHUNK_SIZE - 1;
                     System.out.println(dataSize + " HERE2");
                     total_size += dataSize;
                     Chunk chunk = new Chunk(data, startRange, dataSize);
                     outQueue.put(chunk);
+                    startRange += dataSize;
                     data = new byte[CHUNK_SIZE];
                 }
                 
