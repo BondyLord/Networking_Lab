@@ -43,10 +43,14 @@ class DownloadableMetadata {
 
     boolean isCompleted() {
         //TODO
+<<<<<<< Updated upstream
         if (this.size == IdcDm.getFileSize(url)){
             return true;
         }
         return false;
+=======
+
+>>>>>>> Stashed changes
     }
 
     void delete() {

@@ -1,3 +1,4 @@
+
 /**
  * A Token Bucket (https://en.wikipedia.org/wiki/Token_bucket)
  *
@@ -12,23 +13,41 @@
  */
 class TokenBucket {
 
-    TokenBucket() {
-        //TODO
+    private final long pf_maxNumberOfTokens;
+    private long pm_availableNumberOfTokens;
+    private boolean pm_bucketIsTerminated= false;
+
+    protected TokenBucket(long i_maxNumberOfTokens) {
+        this.pf_maxNumberOfTokens = i_maxNumberOfTokens;
+        this.pm_availableNumberOfTokens= i_maxNumberOfTokens;
     }
 
-    void take(long tokens) {
+    protected void take(long tokens) {
         //TODO
+        synchronized (this){
+            while(pm_availableNumberOfTokens- tokens < 0){
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            pm_availableNumberOfTokens-= tokens;
+        }
     }
 
-    void terminate() {
-        //TODO
+    protected void terminate() {
+        pm_bucketIsTerminated= true;
     }
 
     boolean terminated() {
-        //TODO
+        return pm_bucketIsTerminated;
     }
 
     void set(long tokens) {
-        //TODO
+        if(tokens <= pf_maxNumberOfTokens)
+            pm_availableNumberOfTokens = tokens;
+        else
+            pm_availableNumberOfTokens = pf_maxNumberOfTokens;
     }
 }

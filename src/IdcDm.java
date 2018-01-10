@@ -68,7 +68,7 @@ public class IdcDm {
         Utilities.Log(MODULE_NAME, "starting fileWriterThread");
         fileWriterThread.start();
 
-        TokenBucket tokenBucket = new TokenBucket();
+        TokenBucket tokenBucket = new TokenBucket(maxBytesPerSecond);
         RateLimiter rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
         Thread rateLimiterThread = new Thread(rateLimiter);
         Utilities.Log(MODULE_NAME, "starting rateLimiterThread");

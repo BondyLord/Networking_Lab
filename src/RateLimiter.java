@@ -5,6 +5,8 @@
  * or a "hard" rate limiter by resetting the bucket to maxBytesPerSecond tokens every second.
  */
 public class RateLimiter implements Runnable {
+
+    private static final int RATE_IN_MILLISECOND= 1000;
     private final TokenBucket tokenBucket;
     private final Long maxBytesPerSecond;
 
@@ -15,6 +17,13 @@ public class RateLimiter implements Runnable {
 
     @Override
     public void run() {
-        //TODO
+        while(tokenBucket.terminated() == false){
+            try {
+                Thread.sleep(RATE_IN_MILLISECOND);
+                tokenBucket.set(maxBytesPerSecond);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
