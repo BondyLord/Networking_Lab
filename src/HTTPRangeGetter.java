@@ -16,7 +16,7 @@ public class HTTPRangeGetter implements Runnable {
     static final String MODULE_NAME = "HTTPRangeGetter";
     static final int CHUNK_SIZE = 4096;
     private static final int CONNECT_TIMEOUT = 500;
-    private static final int READ_TIMEOUT = 2000;
+    private static final int READ_TIMEOUT = 20000000;
     private final String url;
     private final Range range;
     private final BlockingQueue<Chunk> outQueue;
@@ -78,23 +78,46 @@ public class HTTPRangeGetter implements Runnable {
                 Utilities.Log(MODULE_NAME,"getting data from request");
                 System.out.println(numberOfNeededChunks + " HERE");
                 // Read all data from the connection string, by the chunk size
+                /*
                 for( int i = 0; i < numberOfNeededChunks; i++)
                 {
                     startRange += (i * CHUNK_SIZE);
                     endRange = startRange + CHUNK_SIZE - 1;
                     
                     in = httpConnection.getInputStream();
-                    dataSize = in.read(data);
+                    //dataSize = in.read(data);
+                    System.out.println(dataSize + " HERE2");
                     
                     Chunk chunk = new Chunk(data, startRange, dataSize);
                     outQueue.add(chunk);
-                }  
+                }
+                */
+                int i = 0;
+                int total_size = 0;
+                in = httpConnection.getInputStream();
+                while(in.available() != 0)
+                {
+                	i++;
+                    //startRange += (i * dataSize);
+                    //endRange = startRange + CHUNK_SIZE - 1;
+                    //in = httpConnection.getInputStream();
+                    dataSize = in.read(data);
+                    startRange += dataSize;
+                    endRange = startRange + CHUNK_SIZE - 1;
+                    System.out.println(dataSize + " HERE2");
+                    total_size += dataSize;
+                    Chunk chunk = new Chunk(data, startRange, dataSize);
+                    outQueue.add(chunk);
+                }
+                
+                System.out.println("total_size " + total_size);
             }
+            
             
             return 1;
             
         } catch (Exception e) {
-        	Utilities.Log(MODULE_NAME,"There was an exception during reading data from queue - " + e.getMessage());
+        	Utilities.Log(MODULE_NAME,"There was an exception during reading data from stream - " + e.getMessage());
         	return 0;
 		} finally {
 			in.close();
