@@ -88,8 +88,8 @@ public class IdcDm {
 
         ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
         long startRange = 0L;
-        long rangeChunkSize = (int) Math.ceil((double) (fileSize / numberOfWorkers));
-        long endRange = rangeChunkSize - 1; // Shister, think about this
+        long rangeChunkSize = (int) Math.ceil(((double)fileSize / numberOfWorkers));
+        long endRange = rangeChunkSize; // Shister, your very smart for thinking about this
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
 
         //<TODO this code is duplicate (implemented in HTTPRangeGetter) - we should decide where it needs to be implemented>
