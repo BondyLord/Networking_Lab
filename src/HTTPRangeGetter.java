@@ -62,8 +62,10 @@ public class HTTPRangeGetter implements Runnable {
         
         int resCode;
         int downloadResponse;
+        int dataSize = 0;
         InputStream in = null;
-        long numberOfNeededChunks= (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
+        System.out.println((double)range.getLength() + " HERE1");
+        long numberOfNeededChunks = (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
         
         try{ 
         	// Get the request response code
@@ -74,7 +76,7 @@ public class HTTPRangeGetter implements Runnable {
             	
                 byte[] data = new byte[CHUNK_SIZE];
                 Utilities.Log(MODULE_NAME,"getting data from request");
-                
+                System.out.println(numberOfNeededChunks + " HERE");
                 // Read all data from the connection string, by the chunk size
                 for( int i = 0; i < numberOfNeededChunks; i++)
                 {
@@ -82,9 +84,9 @@ public class HTTPRangeGetter implements Runnable {
                     endRange = startRange + CHUNK_SIZE - 1;
                     
                     in = httpConnection.getInputStream();
-                    in.read(data);
+                    dataSize = in.read(data);
                     
-                    Chunk chunk = new Chunk(data, startRange, CHUNK_SIZE);
+                    Chunk chunk = new Chunk(data, startRange, dataSize);
                     outQueue.add(chunk);
                 }  
             }
