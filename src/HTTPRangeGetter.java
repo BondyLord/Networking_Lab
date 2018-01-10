@@ -40,6 +40,7 @@ public class HTTPRangeGetter implements Runnable {
         int downloadResponse;
         long numberOfNeededChunks= (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
         URL url = new URL(this.url);
+
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
         httpConnection.setRequestMethod("GET");
         httpConnection.setReadTimeout(READ_TIMEOUT);

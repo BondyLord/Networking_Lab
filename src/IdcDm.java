@@ -57,6 +57,7 @@ public class IdcDm {
         //TODO
         String downloadStatus = "failed";
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
+        // FileSize is in Bytes.
         int fileSize = getFileSize(url);
         int chunkQueueSize = (int) Math.ceil((double) fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
         Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
@@ -128,6 +129,7 @@ public class IdcDm {
             url = new URL(urlString);
             conn = url.openConnection();
             if (conn instanceof HttpURLConnection) {
+                // can ask for content length only...
                 ((HttpURLConnection) conn).setRequestMethod("HEAD");
             }
             conn.getInputStream();
