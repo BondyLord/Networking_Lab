@@ -16,7 +16,7 @@ public class HTTPRangeGetter implements Runnable {
     static final String MODULE_NAME = "HTTPRangeGetter";
     static final int CHUNK_SIZE = 4096;
     private static final int CONNECT_TIMEOUT = 500;
-    private static final int READ_TIMEOUT = 20000000;
+    private static final int READ_TIMEOUT = 20000000; // Shister look on it
     private final String url;
     private final Range range;
     private final BlockingQueue<Chunk> outQueue;
@@ -95,19 +95,21 @@ public class HTTPRangeGetter implements Runnable {
                 int i = 0;
                 int total_size = 0;
                 in = httpConnection.getInputStream();
-                while(in.available() != 0)
+                while((dataSize = in.read(data))!= -1)
                 {
                 	i++;
                     //startRange += (i * dataSize);
                     //endRange = startRange + CHUNK_SIZE - 1;
                     //in = httpConnection.getInputStream();
-                    dataSize = in.read(data);
+                	
+                    //dataSize = in.read(data);
                     startRange += dataSize;
                     endRange = startRange + CHUNK_SIZE - 1;
                     System.out.println(dataSize + " HERE2");
                     total_size += dataSize;
                     Chunk chunk = new Chunk(data, startRange, dataSize);
-                    outQueue.add(chunk);
+                    outQueue.put(chunk);
+                    data = new byte[CHUNK_SIZE];
                 }
                 
                 System.out.println("total_size " + total_size);
