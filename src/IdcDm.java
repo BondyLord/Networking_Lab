@@ -1,5 +1,6 @@
 import Utill.Utilities;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -54,7 +55,12 @@ public class IdcDm {
      */
     private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) {
         // Initiate the file's metadata, and iterate over missing ranges. For each:
-        //TODO
+        DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
+        File metadataFile = new File(downloadableMetadata.getFilename());
+        if (metadataFile.exists()){
+            //<TODO iterate over missing ranges>
+        }
+
         String downloadStatus = "failed";
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         // FileSize is in Bytes.
@@ -63,7 +69,6 @@ public class IdcDm {
         Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
 
         BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
-        DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
         FileWriter fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
         Thread fileWriterThread = new Thread(fileWriter);
         Utilities.Log(MODULE_NAME, "starting fileWriterThread");
@@ -71,7 +76,7 @@ public class IdcDm {
 
         TokenBucket tokenBucket = null;
         RateLimiter rateLimiter = null;
-        
+
         if(maxBytesPerSecond != null)
         {
         	tokenBucket = new TokenBucket(maxBytesPerSecond);
@@ -94,7 +99,7 @@ public class IdcDm {
 
         //<TODO this code is duplicate (implemented in HTTPRangeGetter) - we should decide where it needs to be implemented>
         for (int i = 0; i < numberOfWorkers; i++) {
-        	
+
             Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
             Utilities.Log(MODULE_NAME, "startRange: " + startRange);
             Utilities.Log(MODULE_NAME, "endRange: " + endRange);
@@ -104,7 +109,7 @@ public class IdcDm {
             HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
             Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
             httpRangeGetterTPExecutor.execute(httpRangeGetter);
-            
+
         }
         Utilities.Log(MODULE_NAME, "Starting: Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket");
         // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
