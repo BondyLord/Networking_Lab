@@ -1,10 +1,6 @@
-
-
 import Utill.Utilities;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.BlockingQueue;
@@ -74,7 +70,7 @@ public class HTTPRangeGetter implements Runnable {
         resCode = httpConnection.getResponseCode();
         Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
 
-        if ( resCode == HttpURLConnection.HTTP_OK){
+        if ( resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_PARTIAL){
             byte[] data = new byte[CHUNK_SIZE];
             Utilities.Log(MODULE_NAME,"getting data from request");
             httpConnection.getInputStream().read(data);
