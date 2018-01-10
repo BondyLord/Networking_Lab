@@ -14,14 +14,15 @@ class DownloadableMetadata {
     private final String metadataFilename;
     private String filename;
     private String url;
-    private int size;
+    private long size;
+    private Range missingRange;
     //<TODO decide about a data structure for the ranges>
-    private List<Range> ranges;
 
     DownloadableMetadata(String url) {
         this.url = url;
         this.filename = getName(url);
         this.metadataFilename = getMetadataName(filename);
+        size = 0;
         //TODO
     }
 
@@ -35,15 +36,20 @@ class DownloadableMetadata {
 
     void addRange(Range range) {
         //TODO
+
+        this.size += range.getLength();
     }
 
     String getFilename() {
         return filename;
     }
 
+    String getMetadataFilename() {
+        return metadataFilename;
+    }
+
     boolean isCompleted() {
-        //TODO
-        if (this.size == IdcDm.getFileSize(url)){
+        if (this.getMissingRange() == null){
             return true;
         }
         return false;
@@ -53,12 +59,12 @@ class DownloadableMetadata {
         //TODO
         try{
 
-            File file = new File(metadataFilename);
+            File metadataFile = new File(metadataFilename);
 
-            if(file.delete()){
-                System.out.println(file.getName() + " is deleted!");
+            if(metadataFile.delete()){
+                System.out.println(metadataFile.getName() + " is deleted!");
             }else{
-                System.out.println("Delete operation is failed.");
+                System.out.println("Delete operation has failed.");
             }
 
         }catch(Exception e){
@@ -69,7 +75,12 @@ class DownloadableMetadata {
     }
 
     Range getMissingRange() {
-        return null;
+        //<TODO give real range>
+        if (size == 0){
+            return null;
+        } else{
+            return missingRange;
+        }
     }
 
     String getUrl() {

@@ -1,6 +1,6 @@
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import Utill.Utilities;
+
+import java.io.*;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -10,6 +10,8 @@ import java.util.concurrent.BlockingQueue;
  * synchronously to the underlying storage device.
  */
 public class FileWriter implements Runnable {
+
+    static final String MODULE_NAME = "FileWriter";
 
     private final BlockingQueue<Chunk> chunkQueue;
     private DownloadableMetadata downloadableMetadata;
@@ -21,29 +23,57 @@ public class FileWriter implements Runnable {
 
     private void writeChunks() throws IOException {
         //TODO
-        String fileName = downloadableMetadata.getFilename();
-        FileOutputStream outFile = new FileOutputStream(fileName);
-        String fileMetadataName = downloadableMetadata.getFilename();
-        FileOutputStream outMetadataFile = new FileOutputStream(fileName);
+
+        String tempFileName = downloadableMetadata.getFilename() + ".tmp";
+        File tempFile = new File(tempFileName);
+        if (!tempFile.exists()){
+            tempFile.createNewFile();
+        }
+        Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + tempFileName);
+        RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile.getPath(), "rw");
+
+        String metadataFilename = downloadableMetadata.getMetadataFilename();
+        Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
+        FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
+
         try {
-            synchronized (chunkQueue) {
-                while (!chunkQueue.isEmpty()) {
-                    Chunk chunk = chunkQueue.take();
-                    if (chunk.getOffset()== -1) {
-                        System.out.println("Exiting FileWriter thread, " +
-                                "end of data reached.");
-                        break;
-                    }
-                    outFile.write(chunk.getData());
-                    //<TODO write to metaData>
-                    Range range = new Range(chunk.getOffset(), (long) chunk.getSize_in_bytes());
-                    downloadableMetadata.addRange(range);
+            System.out.println("entering while loop");
+            while (true) {
+                Chunk chunk = chunkQueue.take();
+                if (chunk.getOffset() == -1) {
+                    System.out.println("Exiting FileWriter thread, " +
+                            "end of data reached.");
+                    break;
                 }
-                outFile.close();
-                outMetadataFile.close();
-                //<TODO choose sleep time>
-                Thread.sleep(100);
+
+                byte[] byteArray = chunk.getData();
+
+                randomAccessFile.seek(chunk.getOffset());
+                for (int i = 0; i < chunk.getSize_in_bytes(); i++) {
+                    randomAccessFile.write(byteArray[i]);
+                }
+
+                Range range = new Range(chunk.getOffset(), (long) chunk.getSize_in_bytes());
+
+                downloadableMetadata.addRange(range);
+                //<TODO write to metaData>
+//                outMetadataFile.write(downloadableMetadata.);
             }
+
+            metadataFileOut.close();
+            randomAccessFile.close();
+
+            // rename
+            String fileName = downloadableMetadata.getFilename();
+            File file = new File(fileName);
+            if (tempFile.renameTo(file)) {
+                System.out.println("File: " + tempFile.getName() + " renamed to: " + file.getName());
+            } else {
+                System.out.println("Sorry! the file: " + tempFile.getName() + " can't be renamed");
+            }
+
+            //<TODO choose sleep time>
+            Thread.sleep(100);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
