@@ -47,7 +47,6 @@ class DownloadableMetadata {
             return true;
         }
         return false;
-
     }
 
     void delete() {
@@ -70,7 +69,10 @@ class DownloadableMetadata {
     }
 
     Range getMissingRange() {
+<<<<<<< Updated upstream
         //TODO
+=======
+>>>>>>> Stashed changes
         return null;
     }
 

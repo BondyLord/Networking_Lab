@@ -69,8 +69,19 @@ public class IdcDm {
         Utilities.Log(MODULE_NAME, "starting fileWriterThread");
         fileWriterThread.start();
 
-        TokenBucket tokenBucket = new TokenBucket(maxBytesPerSecond);
-        RateLimiter rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
+        TokenBucket tokenBucket = null;
+        RateLimiter rateLimiter = null;
+        
+        if(maxBytesPerSecond != null)
+        {
+        	tokenBucket = new TokenBucket(maxBytesPerSecond);
+        }
+        else
+        {
+        	tokenBucket = new TokenBucket(Integer.MAX_VALUE);
+            rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
+        }
+
         Thread rateLimiterThread = new Thread(rateLimiter);
         Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
         rateLimiterThread.start();
@@ -78,19 +89,22 @@ public class IdcDm {
         ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
         long startRange = 0L;
         long rangeChunkSize = (int) Math.ceil((double) (fileSize / numberOfWorkers));
-        long endRange = rangeChunkSize - 1;
+        long endRange = rangeChunkSize - 1; // Shister, think about this
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
 
         //<TODO this code is duplicate (implemented in HTTPRangeGetter) - we should decide where it needs to be implemented>
         for (int i = 0; i < numberOfWorkers; i++) {
+        	
+            Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
+            Utilities.Log(MODULE_NAME, "startRange: " + startRange);
+            Utilities.Log(MODULE_NAME, "endRange: " + endRange);
             Range range = new Range(startRange, endRange);
             startRange = endRange + 1;
             endRange += rangeChunkSize;
             HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
             Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
-            Utilities.Log(MODULE_NAME, "startRange: " + startRange);
-            Utilities.Log(MODULE_NAME, "endRange: " + endRange);
             httpRangeGetterTPExecutor.execute(httpRangeGetter);
+            
         }
         Utilities.Log(MODULE_NAME, "Starting: Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket");
         // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket

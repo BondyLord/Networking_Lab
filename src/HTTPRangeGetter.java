@@ -1,6 +1,7 @@
 import Utill.Utilities;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.BlockingQueue;
@@ -34,55 +35,69 @@ public class HTTPRangeGetter implements Runnable {
 
 
     private void downloadRange() throws IOException, InterruptedException {
-
+        String rangRequestProperty;
         long startRange = this.range.getStart();
-        long endRange;
-        int downloadResponse;
-        long numberOfNeededChunks= (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
+        long endRange = this.range.getEnd();
+        
+        // Open the url connection
         URL url = new URL(this.url);
 
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+        
+        // Set HTTP headers
         httpConnection.setRequestMethod("GET");
         httpConnection.setReadTimeout(READ_TIMEOUT);
         httpConnection.setConnectTimeout(CONNECT_TIMEOUT);
-
-        Utilities.Log(MODULE_NAME,"start downloading in "
-                + numberOfNeededChunks
-                + "iterations");
-
-        for( int i = 0; i < numberOfNeededChunks; i++){
-            startRange += (i * CHUNK_SIZE);
-            endRange = startRange + CHUNK_SIZE - 1;
-            downloadResponse = downloadData(startRange, endRange, httpConnection);
-            if (downloadResponse == 0 ){
-                // In the case response code is not 200 (OK)
-                return;
-            }
-        }
-    }
-
-    private int downloadData(long startRange, long endRange, HttpURLConnection httpConnection) throws IOException {
-        String rangRequestProperty;
-        int resCode;
+        
+        // Set range property
         rangRequestProperty = String.format("bytes=%d-%d", startRange, endRange);
         httpConnection.setRequestProperty("Range", rangRequestProperty);
-
         Utilities.Log(MODULE_NAME,"range request - " + rangRequestProperty);
-        resCode = httpConnection.getResponseCode();
-        Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
+        
+        // Download the data in the given range
+        downloadData(httpConnection, startRange , endRange);
+    }
 
-        if ( resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_PARTIAL){
-            byte[] data = new byte[CHUNK_SIZE];
-            Utilities.Log(MODULE_NAME,"getting data from request");
-            httpConnection.getInputStream().read(data);
-            Chunk chunk = new Chunk(data, startRange, CHUNK_SIZE);
-            outQueue.add(chunk);
+    private int downloadData(HttpURLConnection httpConnection, long startRange, long endRange) throws IOException {
+        
+        int resCode;
+        int downloadResponse;
+        InputStream in = null;
+        long numberOfNeededChunks= (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
+        
+        try{ 
+        	// Get the request response code
+            resCode = httpConnection.getResponseCode();
+            Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
+            
+            if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_PARTIAL){
+            	
+                byte[] data = new byte[CHUNK_SIZE];
+                Utilities.Log(MODULE_NAME,"getting data from request");
+                
+                // Read all data from the connection string, by the chunk size
+                for( int i = 0; i < numberOfNeededChunks; i++)
+                {
+                    startRange += (i * CHUNK_SIZE);
+                    endRange = startRange + CHUNK_SIZE - 1;
+                    
+                    in = httpConnection.getInputStream();
+                    in.read(data);
+                    
+                    Chunk chunk = new Chunk(data, startRange, CHUNK_SIZE);
+                    outQueue.add(chunk);
+                }  
+            }
+            
             return 1;
-        }else{
-            Utilities.Log(MODULE_NAME,"houston we have a problem");
-            Utilities.Log(MODULE_NAME,"terminating....");
-            return 0;
-        }
+            
+        } catch (Exception e) {
+        	Utilities.Log(MODULE_NAME,"There was an exception during reading data from queue - " + e.getMessage());
+        	return 0;
+		} finally {
+			in.close();
+			httpConnection.disconnect();
+		}
     }
 
     @Override
