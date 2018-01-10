@@ -69,10 +69,6 @@ class DownloadableMetadata {
     }
 
     Range getMissingRange() {
-<<<<<<< Updated upstream
-        //TODO
-=======
->>>>>>> Stashed changes
         return null;
     }
 
