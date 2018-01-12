@@ -1,7 +1,7 @@
 import Utill.Utilities;
 
-import java.io.File;
-import java.io.IOException;
+import javax.rmi.CORBA.Util;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -57,9 +57,20 @@ public class IdcDm {
     private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) {
         // Initiate the file's metadata, and iterate over missing ranges. For each:
         DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
-        File metadataFile = new File(downloadableMetadata.getFilename());
-        if (metadataFile.exists()){
-            //<TODO iterate over missing ranges>
+        File metadataFile = new File(downloadableMetadata.getMetadataFilename());
+        if (metadataFile.exists()) {
+            try {
+                Utilities.Log(MODULE_NAME, "Reading meta data file...");
+                InputStream readMetaDateFile = new FileInputStream(metadataFile);
+                ObjectInput metaData = new ObjectInputStream(readMetaDateFile);
+                downloadableMetadata = (DownloadableMetadata) metaData.readObject();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
 
         String downloadStatus = "failed";

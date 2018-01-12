@@ -2,6 +2,7 @@ import com.sun.xml.internal.bind.v2.model.core.ID;
 import javafx.scene.control.RadioMenuItem;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,17 +16,17 @@ import java.util.List;
  * CHALLENGE: try to avoid metadata disk footprint of O(n) in the average case
  * HINT: avoid the obvious bitmap solution, and think about ranges...
  */
-class DownloadableMetadata {
+class DownloadableMetadata implements Serializable {
+
     private final String metadataFilename;
     private String filename;
     private String url;
     private ArrayList<Range> m_downLoadedRanges;
     private ArrayList<Range> m_missingRanges;
     private long m_sizeInBytes;
-    //<TODO decide about a data structure for the ranges>
 
     DownloadableMetadata(String url) {
-        this.url = url;
+
         this.filename = getName(url);
         this.metadataFilename = getMetadataName(filename);
         this.m_downLoadedRanges = new ArrayList<Range>();
@@ -63,7 +64,7 @@ class DownloadableMetadata {
                     break;
                 // current Range is bigger than range
                 case 1:
-                    m_downLoadedRanges.add(i-1, range);
+                    m_downLoadedRanges.add(i, range);
                     return;
                 case 0:
                     // update the range to a new range
@@ -109,7 +110,6 @@ class DownloadableMetadata {
     }
 
     protected ArrayList<Range> getMissingRanges() {
-        //<TODO give real range>
         if(m_missingRanges != null){
             return m_missingRanges;
         }

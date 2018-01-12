@@ -1,20 +1,22 @@
+import java.io.Serializable;
+
 /**
  * Describes a simple range, with a start, an end, and a length
  */
-class Range {
-    private Long start;
-    private Long end;
+class Range implements Serializable {
+    private long start;
+    private long end;
 
     Range(Long start, Long end) {
         this.start = start;
         this.end = end;
     }
 
-    Long getStart() {
+    long getStart() {
         return start;
     }
 
-    Long getEnd() {
+    long getEnd() {
         return end;
     }
 
@@ -45,11 +47,11 @@ class Range {
 
     }
 
-    Long getLength() {
+    long getLength() {
         return end - start + 1;
     }
 
-    static class UnionResponse{
+    static class UnionResponse implements Serializable{
 
         private int m_resCode;
         private Range m_updatedRange;
