@@ -112,6 +112,10 @@ class DownloadableMetadata implements Serializable {
     protected ArrayList<Range> getMissingRanges() {
         if(m_missingRanges != null){
             return m_missingRanges;
+        } else if (m_downLoadedRanges.size() == 0) {
+            ArrayList<Range> ranges = new ArrayList<Range>();
+            ranges.add(new Range(0L, IdcDm.fileSize));
+            return ranges;
         }
 
         long fileSize = IdcDm.fileSize;

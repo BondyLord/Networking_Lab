@@ -1,17 +1,17 @@
 import Utill.Utilities;
+//<TODO remove import>
 import org.jetbrains.annotations.NotNull;
 
-import javax.rmi.CORBA.Util;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.concurrent.*;
 
 public class IdcDm {
     static final String MODULE_NAME = "IdcDm";
-    static int fileSize;
+    static long fileSize;
 
     /**
      * Receive arguments from the command-line, provide some feedback and start the download.
@@ -105,7 +105,8 @@ public class IdcDm {
         Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
         rateLimiterThread.start();
 
-        ScheduledExecutorService httpRangeGetterTPExecutor = executeHttpRangeGetterThreadPool(url, numberOfWorkers, chunkQueueSize, chunkQueue, tokenBucket);
+        ArrayList<Range> ranges = downloadableMetadata.getMissingRanges();
+        ScheduledExecutorService httpRangeGetterTPExecutor = executeHttpRangeGetterThreadPool(url, numberOfWorkers, chunkQueueSize, chunkQueue, tokenBucket,ranges);
 
         // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
         joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
@@ -115,23 +116,32 @@ public class IdcDm {
     }
 
     @NotNull
-    private static ScheduledExecutorService executeHttpRangeGetterThreadPool(String url, int numberOfWorkers, int chunkQueueSize, BlockingQueue<Chunk> chunkQueue, TokenBucket tokenBucket) {
+    private static ScheduledExecutorService executeHttpRangeGetterThreadPool(
+            String url,
+            int numberOfWorkers,
+            int chunkQueueSize,
+            BlockingQueue<Chunk> chunkQueue, TokenBucket tokenBucket,
+            ArrayList<Range> ranges) {
         ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
+        long rangeChunkSize = 0;
         long startRange = 0L;
-        long rangeChunkSize = (int) Math.ceil(((double)fileSize / numberOfWorkers));
-        long endRange = rangeChunkSize;
+        long endRange = 0L;
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
-
-        for (int i = 0; i < numberOfWorkers; i++) {
-            Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
-            Utilities.Log(MODULE_NAME, "startRange: " + startRange);
-            Utilities.Log(MODULE_NAME, "endRange: " + endRange);
-            Range range = new Range(startRange, endRange);
-            startRange = endRange + 1;
-            endRange += rangeChunkSize;
-            HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
-            Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
-            httpRangeGetterTPExecutor.execute(httpRangeGetter);
+        for (Range mainRange: ranges) {
+            rangeChunkSize = (int) Math.ceil(((double)mainRange.getLength() / numberOfWorkers));
+            startRange = mainRange.getStart();
+            endRange = startRange + rangeChunkSize;
+            for (int i = 0; i < numberOfWorkers; i++) {
+                Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
+                Utilities.Log(MODULE_NAME, "startRange: " + startRange);
+                Utilities.Log(MODULE_NAME, "endRange: " + endRange);
+                Range range = new Range(startRange, endRange);
+                startRange = endRange + 1;
+                endRange += rangeChunkSize;
+                HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
+                Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
+                httpRangeGetterTPExecutor.execute(httpRangeGetter);
+            }
         }
         return httpRangeGetterTPExecutor;
     }

@@ -38,10 +38,9 @@ public class FileWriter implements Runnable {
         try {
             System.out.println("entering while loop");
 
-            int fileSize = IdcDm.fileSize;
+            long fileSize = IdcDm.fileSize;
 
-//            int progressPercentage = downloadableMetadata.getPrecentageSoFar();
-            double progressPercentage = 0;
+            double progressPercentage = (int) (downloadableMetadata.get_sizeInBytes() / fileSize);
 
             while (true) {
                 Chunk chunk = chunkQueue.take();
@@ -87,7 +86,7 @@ public class FileWriter implements Runnable {
         }
     }
 
-    private double getUpdatedProgress(double progressPercentage, int chunkSize, int fileSize) {
+    private double getUpdatedProgress(double progressPercentage, int chunkSize, long fileSize) {
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
         int progressPercentageAfter = (int) progressPercentage;
