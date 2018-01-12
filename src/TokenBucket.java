@@ -24,15 +24,17 @@ class TokenBucket {
 
     protected void take(long tokens) {
         //TODO
+    	System.out.println("Number of aviliable tokens - " + pm_availableNumberOfTokens);
         synchronized (this){
-            while(pm_availableNumberOfTokens- tokens < 0){
+            while(pm_availableNumberOfTokens - tokens < 0){
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(500); // Maybe implement the block in a different way
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            pm_availableNumberOfTokens-= tokens;
+            
+            pm_availableNumberOfTokens -= tokens;
         }
     }
 
@@ -49,5 +51,11 @@ class TokenBucket {
             pm_availableNumberOfTokens = tokens;
         else
             pm_availableNumberOfTokens = pf_maxNumberOfTokens;
+    }
+    
+    void add(long tokens)
+    {
+        //if(pm_availableNumberOfTokens + tokens <= pf_maxNumberOfTokens)
+        pm_availableNumberOfTokens += tokens;	
     }
 }

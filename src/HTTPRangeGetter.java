@@ -16,7 +16,7 @@ public class HTTPRangeGetter implements Runnable {
     static final String MODULE_NAME = "HTTPRangeGetter";
     static final int CHUNK_SIZE = 4096;
     private static final int CONNECT_TIMEOUT = 500;
-    private static final int READ_TIMEOUT = 20000000; // Shister look on it
+    private static final int READ_TIMEOUT = 2000;
     private final String url;
     private final Range range;
     private final BlockingQueue<Chunk> outQueue;
@@ -41,7 +41,6 @@ public class HTTPRangeGetter implements Runnable {
         
         // Open the url connection
         URL url = new URL(this.url);
-
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
         
         // Set HTTP headers
@@ -49,71 +48,44 @@ public class HTTPRangeGetter implements Runnable {
         httpConnection.setReadTimeout(READ_TIMEOUT);
         httpConnection.setConnectTimeout(CONNECT_TIMEOUT);
         
-        // Set range property
+        // Set the range property
         rangRequestProperty = String.format("bytes=%d-%d", startRange, endRange);
         httpConnection.setRequestProperty("Range", rangRequestProperty);
         Utilities.Log(MODULE_NAME,"range request - " + rangRequestProperty);
         
         // Download the data in the given range
-        downloadData(httpConnection, startRange , endRange);
+        downloadData(httpConnection, startRange);
     }
 
-    private int downloadData(HttpURLConnection httpConnection, long startRange, long endRange) throws IOException {
+    private int downloadData(HttpURLConnection httpConnection, long offset) throws IOException {
         
-        int resCode;
-        int downloadResponse;
+        int resCode = 0;
         int dataSize = 0;
         InputStream in = null;
-        System.out.println((double)range.getLength() + " HERE1");
-        long numberOfNeededChunks = (long) Math.ceil((double)range.getLength()/ CHUNK_SIZE);
         
         try{ 
         	// Get the request response code
             resCode = httpConnection.getResponseCode();
             Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
             
+            // Check the http response code(200 or 206)
             if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_PARTIAL){
-            	
+
                 byte[] data = new byte[CHUNK_SIZE];
                 Utilities.Log(MODULE_NAME,"getting data from request");
-                System.out.println(numberOfNeededChunks + " HERE");
-                // Read all data from the connection string, by the chunk size
-                /*
-                for( int i = 0; i < numberOfNeededChunks; i++)
-                {
-                    startRange += (i * CHUNK_SIZE);
-                    endRange = startRange + CHUNK_SIZE - 1;
-                    
-                    in = httpConnection.getInputStream();
-                    //dataSize = in.read(data);
-                    System.out.println(dataSize + " HERE2");
-                    
-                    Chunk chunk = new Chunk(data, startRange, dataSize);
-                    outQueue.add(chunk);
-                }
-                */
-                int i = 0;
-                int total_size = 0;
+
                 in = httpConnection.getInputStream();
+                
+                // Loop over the response data
                 while((dataSize = in.read(data))!= -1)
                 {
-                	i++;
-                    //startRange += (i * dataSize);
-                    //endRange = startRange + CHUNK_SIZE - 1;
-                    //in = httpConnection.getInputStream();
-                	
-                    //dataSize = in.read(data);
-                    
-                    endRange = startRange + CHUNK_SIZE - 1;
-                    System.out.println(dataSize + " HERE2");
-                    total_size += dataSize;
-                    Chunk chunk = new Chunk(data, startRange, dataSize);
-                    outQueue.put(chunk);
-                    startRange += dataSize;
-                    data = new byte[CHUNK_SIZE];
+                	System.out.println("Trying to take tokens in size - " + dataSize);
+                	tokenBucket.take(dataSize);
+                	System.out.println("After taking");
+                    Chunk chunk = new Chunk(data, offset, dataSize); // A chunk of data read
+                    outQueue.put(chunk); // Put the data in the queue
+                    offset += dataSize; // Change the next data offset
                 }
-                
-                System.out.println("total_size " + total_size);
             }
             
             
@@ -134,7 +106,6 @@ public class HTTPRangeGetter implements Runnable {
             this.downloadRange();
         } catch (IOException | InterruptedException e) {
             Utilities.ErrorLog(MODULE_NAME, e.getMessage());
-            //TODO
         }
     }
 }

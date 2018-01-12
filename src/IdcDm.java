@@ -80,6 +80,7 @@ public class IdcDm {
         if(maxBytesPerSecond != null)
         {
         	tokenBucket = new TokenBucket(maxBytesPerSecond);
+        	rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
         }
         else
         {
