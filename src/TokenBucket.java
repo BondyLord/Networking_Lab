@@ -1,3 +1,5 @@
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A Token Bucket (https://en.wikipedia.org/wiki/Token_bucket)
@@ -13,33 +15,37 @@
  */
 class TokenBucket {
 
-    private final long pf_maxNumberOfTokens;
-    private long pm_availableNumberOfTokens;
+    //private final long pf_maxNumberOfTokens;
+    //private long pm_availableNumberOfTokens;
+    
+    private AtomicLong pf_maxNumberOfTokens;
+    private AtomicLong pm_availableNumberOfTokens;
     private boolean pm_bucketIsTerminated= false;
 
     protected TokenBucket(long i_maxNumberOfTokens) {
-        this.pf_maxNumberOfTokens = i_maxNumberOfTokens;
-        this.pm_availableNumberOfTokens= i_maxNumberOfTokens;
+    	this.pf_maxNumberOfTokens = new AtomicLong(i_maxNumberOfTokens);
+    	this.pm_availableNumberOfTokens = new AtomicLong(i_maxNumberOfTokens);
+        //this.pf_maxNumberOfTokens = i_maxNumberOfTokens;
+        //this.pm_availableNumberOfTokens= i_maxNumberOfTokens;
     }
 
     protected void take(long tokens) {
         //TODO
-    	System.out.println("Number of aviliable tokens - " + pm_availableNumberOfTokens);
-        synchronized (this){
-            while(pm_availableNumberOfTokens - tokens < 0){
-                try {
-                    Thread.sleep(500); // Maybe implement the block in a different way
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+    	System.out.println("Number of aviliable tokens - " + pm_availableNumberOfTokens.get());
+        while(pm_availableNumberOfTokens.get() - tokens < 0){
+            try {
+                Thread.sleep(500); // Maybe implement the block in a different way
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            
-            pm_availableNumberOfTokens -= tokens;
         }
+        
+        pm_availableNumberOfTokens.set(pm_availableNumberOfTokens.get() - tokens);
+
     }
 
     protected void terminate() {
-        pm_bucketIsTerminated= true;
+        pm_bucketIsTerminated = true;
     }
 
     boolean terminated() {
@@ -47,15 +53,17 @@ class TokenBucket {
     }
 
     void set(long tokens) {
-        if(tokens <= pf_maxNumberOfTokens)
-            pm_availableNumberOfTokens = tokens;
+        if(tokens <= pf_maxNumberOfTokens.get())
+            pm_availableNumberOfTokens.set(tokens);
         else
-            pm_availableNumberOfTokens = pf_maxNumberOfTokens;
+            pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
     }
     
     void add(long tokens)
     {
-        //if(pm_availableNumberOfTokens + tokens <= pf_maxNumberOfTokens)
-        pm_availableNumberOfTokens += tokens;	
+        if(pm_availableNumberOfTokens.get() + tokens <= pf_maxNumberOfTokens.get())
+        	pm_availableNumberOfTokens.getAndAdd(tokens);
+        else
+        	pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
     }
 }
