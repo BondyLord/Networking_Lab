@@ -63,7 +63,11 @@ public class HTTPRangeGetter implements Runnable {
         int dataSize = 0;
         InputStream in = null;
         
-        try{ 
+        try{
+        	
+        	// Check tokens avilability before opening a network connection
+        	tokenBucket.take(CHUNK_SIZE);
+        	
         	// Get the request response code
             resCode = httpConnection.getResponseCode();
             Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
@@ -79,15 +83,12 @@ public class HTTPRangeGetter implements Runnable {
                 // Loop over the response data
                 while((dataSize = in.read(data))!= -1)
                 {
-                	System.out.println("Trying to take tokens in size - " + dataSize);
-                	tokenBucket.take(dataSize);
-                	System.out.println("After taking");
+                	tokenBucket.take(dataSize); // Token availability
                     Chunk chunk = new Chunk(data, offset, dataSize); // A chunk of data read
                     outQueue.put(chunk); // Put the data in the queue
                     offset += dataSize; // Change the next data offset
                 }
             }
-            
             
             return 1;
             
