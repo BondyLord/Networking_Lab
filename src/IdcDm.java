@@ -1,7 +1,7 @@
 import Utill.Utilities;
 
-import java.io.File;
-import java.io.IOException;
+import javax.rmi.CORBA.Util;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,6 +10,7 @@ import java.util.concurrent.*;
 
 public class IdcDm {
     static final String MODULE_NAME = "IdcDm";
+    static int fileSize;
 
     /**
      * Receive arguments from the command-line, provide some feedback and start the download.
@@ -56,15 +57,26 @@ public class IdcDm {
     private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) {
         // Initiate the file's metadata, and iterate over missing ranges. For each:
         DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
-        File metadataFile = new File(downloadableMetadata.getFilename());
-        if (metadataFile.exists()){
-            //<TODO iterate over missing ranges>
+        File metadataFile = new File(downloadableMetadata.getMetadataFilename());
+        if (metadataFile.exists()) {
+            try {
+                Utilities.Log(MODULE_NAME, "Reading meta data file...");
+                InputStream readMetaDateFile = new FileInputStream(metadataFile);
+                ObjectInput metaData = new ObjectInputStream(readMetaDateFile);
+                downloadableMetadata = (DownloadableMetadata) metaData.readObject();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
         }
 
         String downloadStatus = "failed";
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         // FileSize is in Bytes.
-        int fileSize = getFileSize(url);
+        fileSize = getFileSize(url);
         int chunkQueueSize = (int) Math.ceil((double) fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
         Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
 
@@ -144,24 +156,20 @@ public class IdcDm {
 
     protected static int getFileSize(String urlString) {
         URL url = null;
-        URLConnection conn = null;
+        HttpURLConnection httpConnection = null;
         try {
             url = new URL(urlString);
-            conn = url.openConnection();
-            if (conn instanceof HttpURLConnection) {
-                // can ask for content length only...
-                ((HttpURLConnection) conn).setRequestMethod("HEAD");
-            }
-            conn.getInputStream();
-            return conn.getContentLength();
+            httpConnection = (HttpURLConnection) url.openConnection();
+            // can ask for content length only...
+            httpConnection.setRequestMethod("HEAD");
+            httpConnection.getInputStream();
+            return httpConnection.getContentLength();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (conn instanceof HttpURLConnection) {
-                ((HttpURLConnection) conn).disconnect();
-            }
+            httpConnection.disconnect();
         }
         return -1;
     }

@@ -35,9 +35,16 @@ public class FileWriter implements Runnable {
         String metadataFilename = downloadableMetadata.getMetadataFilename();
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
         FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
+        ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
 
         try {
             System.out.println("entering while loop");
+
+            int fileSize = IdcDm.fileSize;
+
+//            int progressPercentage = downloadableMetadata.getPrecentageSoFar();
+            double progressPercentage = 0;
+
             while (true) {
                 Chunk chunk = chunkQueue.take();
                 if (chunk.getOffset() == -1) {
@@ -47,19 +54,19 @@ public class FileWriter implements Runnable {
                 }
 
                 byte[] byteArray = chunk.getData();
-
                 randomAccessFile.seek(chunk.getOffset());
-                for (int i = 0; i < chunk.getSize_in_bytes(); i++) {
+                int chunkSize = chunk.getSize_in_bytes();
+                for (int i = 0; i < chunkSize; i++) {
                     randomAccessFile.write(byteArray[i]);
                 }
 
-                Range range = new Range(chunk.getOffset(), (long) chunk.getSize_in_bytes());
-
+                progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
+                Range range = new Range(chunk.getOffset(), (long) chunkSize);
                 downloadableMetadata.addRange(range);
-                //<TODO write to metaData>
-//                outMetadataFile.write(downloadableMetadata.);
+                metadataObjectOut.writeObject(downloadableMetadata);
             }
 
+            metadataObjectOut.close();
             metadataFileOut.close();
             randomAccessFile.close();
 
@@ -77,6 +84,16 @@ public class FileWriter implements Runnable {
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private double getUpdatedProgress(double progressPercentage, int chunkSize, int fileSize) {
+        double progressPercentageBefore = progressPercentage;
+        progressPercentage += ((double) chunkSize / fileSize) * 100;
+        int progressPercentageAfter = (int) progressPercentage;
+        if ((Math.floor(progressPercentageBefore) != progressPercentageAfter) || progressPercentageBefore == 0.0) {
+            System.out.println("Downloaded " + progressPercentageAfter + "%");
+        }
+        return progressPercentage;
     }
 
     @Override

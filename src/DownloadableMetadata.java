@@ -1,4 +1,10 @@
+import com.sun.xml.internal.bind.v2.model.core.ID;
+import javafx.scene.control.RadioMenuItem;
+
 import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -10,20 +16,22 @@ import java.util.List;
  * CHALLENGE: try to avoid metadata disk footprint of O(n) in the average case
  * HINT: avoid the obvious bitmap solution, and think about ranges...
  */
-class DownloadableMetadata {
+class DownloadableMetadata implements Serializable {
+
     private final String metadataFilename;
     private String filename;
     private String url;
-    private long size;
-    private Range missingRange;
-    //<TODO decide about a data structure for the ranges>
+    private ArrayList<Range> m_downLoadedRanges;
+    private ArrayList<Range> m_missingRanges;
+    private long m_sizeInBytes;
 
     DownloadableMetadata(String url) {
-        this.url = url;
+
         this.filename = getName(url);
         this.metadataFilename = getMetadataName(filename);
-        size = 0;
-        //TODO
+        this.m_downLoadedRanges = new ArrayList<Range>();
+        this.m_missingRanges = null;
+        this.m_sizeInBytes = 0;
     }
 
     private static String getMetadataName(String filename) {
@@ -34,31 +42,60 @@ class DownloadableMetadata {
         return path.substring(path.lastIndexOf('/') + 1, path.length());
     }
 
-    void addRange(Range range) {
-        //TODO
+    protected void addRange(Range range) {
+        int resCode;
+        Range currentRange;
+        m_sizeInBytes += range.getLength();
 
-        this.size += range.getLength();
+        if(m_downLoadedRanges.size() == 0){
+            m_downLoadedRanges.add(range);
+            return;
+        }
+
+        for(int i=0; i < m_downLoadedRanges.size(); i++){
+
+            currentRange = m_downLoadedRanges.get(i);
+            Range.UnionResponse res = Range.unionRanges(currentRange, range);
+            resCode = res.get_res();
+
+            switch (resCode){
+                // range is bigger than current
+                case -1:
+                    break;
+                // current Range is bigger than range
+                case 1:
+                    m_downLoadedRanges.add(i, range);
+                    return;
+                case 0:
+                    // update the range to a new range
+                    m_downLoadedRanges.add(i,res.get_updatedRange());
+                    m_downLoadedRanges.remove(i+1);
+                    return;
+            }
+        }
     }
 
-    String getFilename() {
+    protected long get_sizeInBytes(){
+        return m_sizeInBytes;
+    }
+
+    protected String getFilename() {
         return filename;
     }
 
-    String getMetadataFilename() {
+    protected String getMetadataFilename() {
         return metadataFilename;
     }
 
-    boolean isCompleted() {
-        if (this.getMissingRange() == null){
+    protected boolean isCompleted() {
+        if (IdcDm.fileSize == m_sizeInBytes){
             return true;
         }
         return false;
     }
 
-    void delete() {
-        //TODO
+    protected void delete() {
         try{
-
             File metadataFile = new File(metadataFilename);
 
             if(metadataFile.delete()){
@@ -68,19 +105,31 @@ class DownloadableMetadata {
             }
 
         }catch(Exception e){
-
             e.printStackTrace();
-
         }
     }
 
-    Range getMissingRange() {
-        //<TODO give real range>
-        if (size == 0){
-            return null;
-        } else{
-            return missingRange;
+    protected ArrayList<Range> getMissingRanges() {
+        if(m_missingRanges != null){
+            return m_missingRanges;
         }
+
+        long fileSize = IdcDm.fileSize;
+        m_missingRanges = new ArrayList<Range>();
+        Range currentMissingRange;
+        long lastDownloadedByte;
+        int index;
+        for( index= 1; index < m_downLoadedRanges.size(); index++){
+            currentMissingRange = new Range(m_downLoadedRanges.get(index-1).getEnd(),
+                                            m_downLoadedRanges.get(index).getStart());
+            m_missingRanges.add(currentMissingRange);
+        }
+        lastDownloadedByte = m_downLoadedRanges.get(index-1).getEnd();
+        if( lastDownloadedByte != fileSize){
+            currentMissingRange = new Range(lastDownloadedByte,
+                                            fileSize);
+        }
+        return getMissingRanges();
     }
 
     String getUrl() {
