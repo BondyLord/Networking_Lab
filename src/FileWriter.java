@@ -34,8 +34,6 @@ public class FileWriter implements Runnable {
 
         String metadataFilename = downloadableMetadata.getMetadataFilename();
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
-        FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
-        ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
 
         try {
             System.out.println("entering while loop");
@@ -61,13 +59,16 @@ public class FileWriter implements Runnable {
                 }
 
                 progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
-                Range range = new Range(chunk.getOffset(), (long) chunkSize);
+                Range range = new Range(chunk.getOffset(), chunk.getOffset() + (long) chunkSize);
                 downloadableMetadata.addRange(range);
+                Utilities.Log(MODULE_NAME, "Range: " + range.getEnd() + " was added");
+                FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
+                ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
                 metadataObjectOut.writeObject(downloadableMetadata);
+                //<TODO think of a better solution>
+                metadataObjectOut.close();
+                metadataFileOut.close();
             }
-
-            metadataObjectOut.close();
-            metadataFileOut.close();
             randomAccessFile.close();
 
             // rename

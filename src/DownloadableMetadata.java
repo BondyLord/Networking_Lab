@@ -1,11 +1,7 @@
-import com.sun.xml.internal.bind.v2.model.core.ID;
-import javafx.scene.control.RadioMenuItem;
-
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Describes a file's metadata: URL, file name, size, and which parts already downloaded to disk.
@@ -61,6 +57,10 @@ class DownloadableMetadata implements Serializable {
             switch (resCode){
                 // range is bigger than current
                 case -1:
+                    if( i == m_downLoadedRanges.size() - 1) {
+                        m_downLoadedRanges.add(range);
+                        return;
+                    }
                     break;
                 // current Range is bigger than range
                 case 1:
@@ -121,8 +121,10 @@ class DownloadableMetadata implements Serializable {
         int index;
         for( index= 1; index < m_downLoadedRanges.size(); index++){
             currentMissingRange = new Range(m_downLoadedRanges.get(index-1).getEnd(),
-                                            m_downLoadedRanges.get(index).getStart());
-            m_missingRanges.add(currentMissingRange);
+                    m_downLoadedRanges.get(index).getStart());
+            if (currentMissingRange.getLength() != 0) {
+                m_missingRanges.add(currentMissingRange);
+            }
         }
         lastDownloadedByte = m_downLoadedRanges.get(index-1).getEnd();
         if( lastDownloadedByte != fileSize){

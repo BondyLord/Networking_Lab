@@ -1,4 +1,5 @@
 import Utill.Utilities;
+import org.jetbrains.annotations.NotNull;
 
 import javax.rmi.CORBA.Util;
 import java.io.*;
@@ -104,15 +105,24 @@ public class IdcDm {
         Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
         rateLimiterThread.start();
 
+        ScheduledExecutorService httpRangeGetterTPExecutor = executeHttpRangeGetterThreadPool(url, numberOfWorkers, chunkQueueSize, chunkQueue, tokenBucket);
+
+        // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
+        joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
+
+        // Finally, print "Download succeeded/failed" and delete the metadata as needed.
+        printStatusAndDeleteMeta(downloadableMetadata, downloadStatus);
+    }
+
+    @NotNull
+    private static ScheduledExecutorService executeHttpRangeGetterThreadPool(String url, int numberOfWorkers, int chunkQueueSize, BlockingQueue<Chunk> chunkQueue, TokenBucket tokenBucket) {
         ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
         long startRange = 0L;
         long rangeChunkSize = (int) Math.ceil(((double)fileSize / numberOfWorkers));
-        long endRange = rangeChunkSize; // Shister, your very smart for thinking about this
+        long endRange = rangeChunkSize;
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
 
-        //<TODO this code is duplicate (implemented in HTTPRangeGetter) - we should decide where it needs to be implemented>
         for (int i = 0; i < numberOfWorkers; i++) {
-
             Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
             Utilities.Log(MODULE_NAME, "startRange: " + startRange);
             Utilities.Log(MODULE_NAME, "endRange: " + endRange);
@@ -122,10 +132,19 @@ public class IdcDm {
             HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
             Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
             httpRangeGetterTPExecutor.execute(httpRangeGetter);
-
         }
-        Utilities.Log(MODULE_NAME, "Starting: Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket");
-        // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
+        return httpRangeGetterTPExecutor;
+    }
+
+    private static void printStatusAndDeleteMeta(DownloadableMetadata downloadableMetadata, String downloadStatus) {
+        if (downloadableMetadata.isCompleted()){
+            downloadStatus = "succeeded";
+            downloadableMetadata.delete();
+        }
+        System.out.println("Download " + downloadStatus);
+    }
+
+    private static void joinThreads(BlockingQueue<Chunk> chunkQueue, Thread fileWriterThread, TokenBucket tokenBucket, Thread rateLimiterThread, ScheduledExecutorService httpRangeGetterTPExecutor) {
         try {
             httpRangeGetterTPExecutor.shutdown();
             while (!httpRangeGetterTPExecutor.awaitTermination(24L, TimeUnit.HOURS)) {
@@ -144,13 +163,6 @@ public class IdcDm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        // Finally, print "Download succeeded/failed" and delete the metadata as needed.
-        if (downloadableMetadata.isCompleted()){
-            downloadStatus = "succeeded";
-            downloadableMetadata.delete();
-        }
-        System.out.println("Download " + downloadStatus);
     }
 
 

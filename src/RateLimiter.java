@@ -21,7 +21,7 @@ public class RateLimiter implements Runnable {
         while(!tokenBucket.terminated()){
             try {
                 Thread.sleep(RATE_IN_MILLISECOND);
-                System.out.println("Adding tokens - " + maxBytesPerSecond);
+//                System.out.println("Adding tokens - " + maxBytesPerSecond);
                 tokenBucket.add(maxBytesPerSecond);
             } catch (InterruptedException e) {
                 e.printStackTrace();
