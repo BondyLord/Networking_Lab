@@ -90,9 +90,12 @@ public class FileWriter implements Runnable {
     }
 
     private double getUpdatedProgress(double progressPercentage, int chunkSize, int fileSize) {
-        progressPercentage += ((double)chunkSize / fileSize) * 100;
-
-        System.out.println("Downloaded " + Math.floor(progressPercentage));
+        double progressPercentageBefore = progressPercentage;
+        progressPercentage += ((double) chunkSize / fileSize) * 100;
+        int progressPercentageAfter = (int) progressPercentage;
+        if ((Math.floor(progressPercentageBefore) != progressPercentageAfter) || progressPercentageBefore == 0.0) {
+            System.out.println("Downloaded " + progressPercentageAfter + "%");
+        }
         return progressPercentage;
     }
 
