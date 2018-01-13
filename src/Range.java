@@ -28,14 +28,14 @@ class Range implements Serializable {
         Long diff = i_rangeOne.getStart() - i_rangeTwo.getStart();
 
         if(diff < 0){
-            if(i_rangeOne.getEnd() == i_rangeTwo.getStart()){
+            if(i_rangeOne.getEnd() >= i_rangeTwo.getStart()){
                 resRange = new Range(i_rangeOne.getStart(), i_rangeTwo.getEnd());
             }else{
                 // range two is bigger than range one
                 resCode = -1;
             }
         }else{
-            if( i_rangeOne.getStart() == i_rangeTwo.getEnd()){
+            if( i_rangeOne.getStart() <= i_rangeTwo.getEnd()){
                 resRange = new Range(i_rangeTwo.getStart(), i_rangeOne.getEnd() );
             }else{
                 // range one is bigger than range two

@@ -6,7 +6,7 @@
 class Chunk {
     private byte[] data;
     private long offset;
-    private int size_in_bytes;
+    private long size_in_bytes;
 
     Chunk(byte[] data, long offset, int size_in_bytes) {
         this.data = data != null ? data.clone() : null;
@@ -22,7 +22,7 @@ class Chunk {
         return offset;
     }
 
-    int getSize_in_bytes() {
+    long getSize_in_bytes() {
         return size_in_bytes;
     }
 }

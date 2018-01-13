@@ -52,15 +52,15 @@ public class FileWriter implements Runnable {
 
                 byte[] byteArray = chunk.getData();
                 randomAccessFile.seek(chunk.getOffset());
-                int chunkSize = chunk.getSize_in_bytes();
+                long chunkSize = chunk.getSize_in_bytes();
                 for (int i = 0; i < chunkSize; i++) {
                     randomAccessFile.write(byteArray[i]);
                 }
 
                 progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
-                Range range = new Range(chunk.getOffset(), chunk.getOffset() + (long) chunkSize);
+                Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
                 downloadableMetadata.addRange(range);
-                Utilities.Log(MODULE_NAME, "Range: " + range.getEnd() + " was added");
+                Utilities.Log(MODULE_NAME, "Range: " +range.getStart() + ":" + range.getEnd() + " was added");
                 FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
                 ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
                 metadataObjectOut.writeObject(downloadableMetadata);
@@ -86,7 +86,7 @@ public class FileWriter implements Runnable {
         }
     }
 
-    private double getUpdatedProgress(double progressPercentage, int chunkSize, long fileSize) {
+    private double getUpdatedProgress(double progressPercentage, long chunkSize, long fileSize) {
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
         int progressPercentageAfter = (int) progressPercentage;

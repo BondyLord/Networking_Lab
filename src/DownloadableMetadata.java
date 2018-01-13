@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -88,7 +87,7 @@ class DownloadableMetadata implements Serializable {
     }
 
     protected boolean isCompleted() {
-        if (IdcDm.fileSize == m_sizeInBytes){
+        if (getMissingRanges().size() == 0){
             return true;
         }
         return false;
@@ -110,9 +109,7 @@ class DownloadableMetadata implements Serializable {
     }
 
     protected ArrayList<Range> getMissingRanges() {
-        if(m_missingRanges != null){
-            return m_missingRanges;
-        } else if (m_downLoadedRanges.size() == 0) {
+        if (m_downLoadedRanges.size() == 0) {
             ArrayList<Range> ranges = new ArrayList<Range>();
             ranges.add(new Range(0L, IdcDm.fileSize));
             return ranges;
@@ -124,18 +121,20 @@ class DownloadableMetadata implements Serializable {
         long lastDownloadedByte;
         int index;
         for( index= 1; index < m_downLoadedRanges.size(); index++){
-            currentMissingRange = new Range(m_downLoadedRanges.get(index-1).getEnd(),
-                    m_downLoadedRanges.get(index).getStart());
-            if (currentMissingRange.getLength() != 0) {
+            if(m_downLoadedRanges.get(index-1).getEnd() < m_downLoadedRanges.get(index).getStart()){
+                currentMissingRange = new Range(m_downLoadedRanges.get(index-1).getEnd(),
+                        m_downLoadedRanges.get(index).getStart());
                 m_missingRanges.add(currentMissingRange);
             }
         }
+
         lastDownloadedByte = m_downLoadedRanges.get(index-1).getEnd();
         if( lastDownloadedByte != fileSize){
             currentMissingRange = new Range(lastDownloadedByte,
                                             fileSize);
+            m_missingRanges.add(currentMissingRange);
         }
-        return getMissingRanges();
+        return m_missingRanges;
     }
 
     String getUrl() {

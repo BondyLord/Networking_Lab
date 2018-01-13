@@ -92,12 +92,12 @@ public class IdcDm {
 
         if(maxBytesPerSecond != null)
         {
-        	tokenBucket = new TokenBucket(maxBytesPerSecond);
-        	rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
+            tokenBucket = new TokenBucket(maxBytesPerSecond);
+            rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
         }
         else
         {
-        	tokenBucket = new TokenBucket(Integer.MAX_VALUE);
+            tokenBucket = new TokenBucket(Integer.MAX_VALUE);
             rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
         }
 
@@ -106,7 +106,14 @@ public class IdcDm {
         rateLimiterThread.start();
 
         ArrayList<Range> ranges = downloadableMetadata.getMissingRanges();
-        ScheduledExecutorService httpRangeGetterTPExecutor = executeHttpRangeGetterThreadPool(url, numberOfWorkers, chunkQueueSize, chunkQueue, tokenBucket,ranges);
+        ExecutorService httpRangeGetterTPExecutor =
+                executeHttpRangeGetterThreadPool(
+                        url,
+                        numberOfWorkers,
+                        chunkQueueSize,
+                        chunkQueue,
+                        tokenBucket,
+                        ranges);
 
         // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
         joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
@@ -116,13 +123,13 @@ public class IdcDm {
     }
 
     @NotNull
-    private static ScheduledExecutorService executeHttpRangeGetterThreadPool(
+    private static ExecutorService executeHttpRangeGetterThreadPool(
             String url,
             int numberOfWorkers,
             int chunkQueueSize,
             BlockingQueue<Chunk> chunkQueue, TokenBucket tokenBucket,
             ArrayList<Range> ranges) {
-        ScheduledExecutorService httpRangeGetterTPExecutor = Executors.newScheduledThreadPool(numberOfWorkers);
+        ExecutorService httpRangeGetterTPExecutor = Executors.newFixedThreadPool(numberOfWorkers);
         long rangeChunkSize = 0;
         long startRange = 0L;
         long endRange = 0L;
@@ -131,22 +138,33 @@ public class IdcDm {
             rangeChunkSize = (int) Math.ceil(((double)mainRange.getLength() / numberOfWorkers));
             startRange = mainRange.getStart();
             endRange = startRange + rangeChunkSize;
+
             for (int i = 0; i < numberOfWorkers; i++) {
                 Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
                 Utilities.Log(MODULE_NAME, "startRange: " + startRange);
                 Utilities.Log(MODULE_NAME, "endRange: " + endRange);
+
                 Range range = new Range(startRange, endRange);
-                startRange = endRange + 1;
-                endRange += rangeChunkSize;
                 HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
+
+                startRange = endRange + 1;
+                if( i == numberOfWorkers - 2){
+                    endRange = mainRange.getEnd();
+                }
+                else{
+                    endRange += rangeChunkSize;
+                }
                 Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
                 httpRangeGetterTPExecutor.execute(httpRangeGetter);
             }
+
         }
         return httpRangeGetterTPExecutor;
     }
 
-    private static void printStatusAndDeleteMeta(DownloadableMetadata downloadableMetadata, String downloadStatus) {
+    private static void printStatusAndDeleteMeta(
+            DownloadableMetadata downloadableMetadata,
+            String downloadStatus) {
         if (downloadableMetadata.isCompleted()){
             downloadStatus = "succeeded";
             downloadableMetadata.delete();
@@ -154,7 +172,12 @@ public class IdcDm {
         System.out.println("Download " + downloadStatus);
     }
 
-    private static void joinThreads(BlockingQueue<Chunk> chunkQueue, Thread fileWriterThread, TokenBucket tokenBucket, Thread rateLimiterThread, ScheduledExecutorService httpRangeGetterTPExecutor) {
+    private static void joinThreads(
+            BlockingQueue<Chunk> chunkQueue,
+            Thread fileWriterThread,
+            TokenBucket tokenBucket,
+            Thread rateLimiterThread,
+            ExecutorService httpRangeGetterTPExecutor) {
         try {
             httpRangeGetterTPExecutor.shutdown();
             while (!httpRangeGetterTPExecutor.awaitTermination(24L, TimeUnit.HOURS)) {
