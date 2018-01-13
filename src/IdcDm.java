@@ -48,6 +48,8 @@ public class IdcDm {
             System.err.printf(" limited to %d Bps", maxBytesPerSecond);
         System.err.printf("...\n");
 
+        String downloadStatus = "failed";
+
         downloadableMetadata = new DownloadableMetadata(url);
         
         while(!downloadableMetadata.isCompleted() && numberOfDownloadAttempts <= 3)
@@ -68,10 +70,12 @@ public class IdcDm {
         {
         	FileWriter.renameTmp(downloadableMetadata.getFilename());
             downloadableMetadata.delete();
-            System.out.println("Download success!");
+            downloadStatus = "succeeded";
         }
-        else
-        	Utilities.Log(MODULE_NAME, "Exceded number of max trys - " + numberOfDownloadAttempts);
+        else {
+            Utilities.Log(MODULE_NAME, "Exceded number of max trys - " + numberOfDownloadAttempts);
+        }
+        System.out.println("Download "+ downloadStatus);
     }
 
     /**
@@ -106,7 +110,6 @@ public class IdcDm {
             }
         }
 
-        String downloadStatus = "failed";
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         // FileSize is in Bytes.
         fileSize = getFileSize(url);
@@ -159,7 +162,6 @@ public class IdcDm {
     }
 
 
-    //@NotNull
     private static ExecutorService executeHttpRangeGetterThreadPool(
             String url,
             int numberOfWorkers,
@@ -209,11 +211,6 @@ public class IdcDm {
         return httpRangeGetterTPExecutor;
     }
 
-    private static void printStatusAndDeleteMeta(DownloadableMetadata downloadableMetadata) 
-    {
-            downloadableMetadata.delete();
-            System.out.println("Download success!");        
-    }
 
     private static void joinThreads(
             BlockingQueue<Chunk> chunkQueue,

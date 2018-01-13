@@ -53,6 +53,7 @@ public class FileWriter implements Runnable {
                 //Utilities.Log(MODULE_NAME, "Range: " +range.getStart() + ":" + range.getEnd() + " was added");
                 updateMetadata(metadataFilename);
             }
+            Thread.sleep(500);
             randomAccessFile.close();
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
@@ -85,12 +86,14 @@ public class FileWriter implements Runnable {
 
     public static void renameTmp(String fileName) {
         File tmpFile = new File(fileName + ".tmp");
-        File file = new File(fileName);
-        try {
-            Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            Utilities.Log(MODULE_NAME, "File: " + tmpFile + " renamed to: " + file.getName());
-        } catch (IOException ex) {
-            Utilities.Log(MODULE_NAME, "Sorry! the file: " + tmpFile + " can't be renamed");
+        if (tmpFile.exists()) {
+            File file = new File(fileName);
+            try {
+                Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Utilities.Log(MODULE_NAME, "File: " + tmpFile + " renamed to: " + file.getName());
+            } catch (IOException ex) {
+                Utilities.Log(MODULE_NAME, "Sorry! the file: " + tmpFile + " can't be renamed");
+            }
         }
     }
 
