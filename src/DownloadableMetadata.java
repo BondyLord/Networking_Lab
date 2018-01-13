@@ -99,7 +99,6 @@ class DownloadableMetadata implements Serializable {
     protected void delete() {
         try {
             File metadataFile = new File(metadataFilename);
-
             if (metadataFile.delete()) {
                 Utilities.Log(MODULE_NAME,metadataFile.getName() + " is deleted!");
             } else {

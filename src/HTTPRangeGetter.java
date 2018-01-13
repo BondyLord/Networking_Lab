@@ -62,8 +62,7 @@ public class HTTPRangeGetter implements Runnable {
             long offset)
             throws
             IOException,
-            InterruptedException
-    {
+            InterruptedException {
 
         int resCode = 0;
         int dataSize = 0;
@@ -71,7 +70,7 @@ public class HTTPRangeGetter implements Runnable {
 
         try {
 
-            // Check tokens avilability before opening a network connection
+            // Check tokens availability before opening a network connection
             tokenBucket.take(CHUNK_SIZE);
 
             // Get the request response code
@@ -97,9 +96,9 @@ public class HTTPRangeGetter implements Runnable {
 
         } catch (Exception e) {
             Utilities.Log(MODULE_NAME, "There was an exception during reading data from stream - " + e.getMessage());
-            throw(e);
+            throw (e);
         } finally {
-            if (in != null){
+            if (in != null) {
                 in.close();
             }
             httpConnection.disconnect();
@@ -107,7 +106,7 @@ public class HTTPRangeGetter implements Runnable {
     }
 
     @Override
-    public void run(){
+    public void run() {
         try {
             this.downloadRange();
         } catch (IOException | InterruptedException e) {

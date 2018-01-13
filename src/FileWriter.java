@@ -1,6 +1,7 @@
 import Utill.Utilities;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -36,28 +37,23 @@ public class FileWriter implements Runnable {
         long fileSize = IdcDm.fileSize;
         double progressPercentage = (int) (((double) downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
         try {
-//            System.out.println("entering while loop");
             while (true) {
                 Chunk chunk = chunkQueue.take();
                 // stopping while at end of data
                 if (chunk.getOffset() == -1) {
-                    Utilities.Log(MODULE_NAME,"Exiting FileWriter thread, " +
+                    Utilities.Log(MODULE_NAME, "Exiting FileWriter thread, " +
                             "end of data reached.");
                     break;
                 }
 
                 long chunkSize = chunk.getSize_in_bytes();
                 writeDataToFile(randomAccessFile, chunk, chunkSize);
-
                 progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
                 addDownloadedRange(chunk, chunkSize);
                 //Utilities.Log(MODULE_NAME, "Range: " +range.getStart() + ":" + range.getEnd() + " was added");
                 updateMetadata(metadataFilename);
             }
-            
             randomAccessFile.close();
-            //<TODO choose sleep time>
-            Thread.sleep(100);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
@@ -69,13 +65,14 @@ public class FileWriter implements Runnable {
         metadataObjectOut.writeObject(downloadableMetadata);
         metadataObjectOut.close();
         metadataFileOut.close();
+        // to handle corrupted temp file - renaming metadata.tmp file to metadata after writing
         renameTmp(metadataFilename);
     }
 
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
         Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
         downloadableMetadata.addRange(range);
-        //Utilities.Log(MODULE_NAME, "Range: " + range.getStart() + ":" + range.getEnd() + " was added");
+//        Utilities.Log(MODULE_NAME, "Range: " + range.getStart() + ":" + range.getEnd() + " was added");
     }
 
     private void writeDataToFile(RandomAccessFile randomAccessFile, Chunk chunk, long chunkSize) throws IOException {
@@ -86,16 +83,17 @@ public class FileWriter implements Runnable {
         }
     }
 
-	public static void renameTmp(String fileName) {
-		File tmpFile = new File(fileName + ".tmp");
-		File file = new File(fileName);
-		if (tmpFile.renameTo(file)) {
-		    Utilities.Log(MODULE_NAME,"File: " + tmpFile + " renamed to: " + file.getName());
-		} else {
-            Utilities.Log(MODULE_NAME,"Sorry! the file: " + tmpFile + " can't be renamed");
-		}
-	}
-    
+    public static void renameTmp(String fileName) {
+        File tmpFile = new File(fileName + ".tmp");
+        File file = new File(fileName);
+        try {
+            Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Utilities.Log(MODULE_NAME, "File: " + tmpFile + " renamed to: " + file.getName());
+        } catch (IOException ex) {
+            Utilities.Log(MODULE_NAME, "Sorry! the file: " + tmpFile + " can't be renamed");
+        }
+    }
+
     private double getUpdatedProgress(double progressPercentage, long chunkSize, long fileSize) {
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
@@ -112,7 +110,6 @@ public class FileWriter implements Runnable {
             this.writeChunks();
         } catch (IOException e) {
             e.printStackTrace();
-            //TODO
         }
     }
 }
