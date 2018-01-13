@@ -47,8 +47,6 @@ public class HTTPRangeGetter implements Runnable {
         httpConnection.setRequestMethod("GET");
         httpConnection.setReadTimeout(READ_TIMEOUT);
         httpConnection.setConnectTimeout(CONNECT_TIMEOUT);
-        httpConnection.setRequestProperty("Connection", "Keep-Alive");
-        httpConnection.setRequestProperty("Keep-Alive", "header");
 
         // Set the range property
         rangRequestProperty = String.format("bytes=%d-%d", startRange, endRange);
