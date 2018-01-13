@@ -73,7 +73,6 @@ public class FileWriter implements Runnable {
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
         Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
         downloadableMetadata.addRange(range);
-//        Utilities.Log(MODULE_NAME, "Range: " + range.getStart() + ":" + range.getEnd() + " was added");
     }
 
     private void writeDataToFile(RandomAccessFile randomAccessFile, Chunk chunk, long chunkSize) throws IOException {
