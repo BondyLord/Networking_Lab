@@ -38,67 +38,66 @@ public class HTTPRangeGetter implements Runnable {
         String rangRequestProperty;
         long startRange = this.range.getStart();
         long endRange = this.range.getEnd();
-        
+
         // Open the url connection
         URL url = new URL(this.url);
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-        
+
         // Set HTTP headers
         httpConnection.setRequestMethod("GET");
         httpConnection.setReadTimeout(READ_TIMEOUT);
         httpConnection.setConnectTimeout(CONNECT_TIMEOUT);
-        
+
         // Set the range property
         rangRequestProperty = String.format("bytes=%d-%d", startRange, endRange);
         httpConnection.setRequestProperty("Range", rangRequestProperty);
-        Utilities.Log(MODULE_NAME,"range request - " + rangRequestProperty);
-        
+        Utilities.Log(MODULE_NAME, "range request - " + rangRequestProperty);
+
         // Download the data in the given range
         downloadData(httpConnection, startRange);
     }
 
     private int downloadData(HttpURLConnection httpConnection, long offset) throws IOException {
-        
+
         int resCode = 0;
         int dataSize = 0;
         InputStream in = null;
-        
-        try{
-        	
-        	// Check tokens avilability before opening a network connection
-        	tokenBucket.take(CHUNK_SIZE);
-        	
-        	// Get the request response code
+
+        try {
+
+            // Check tokens avilability before opening a network connection
+            tokenBucket.take(CHUNK_SIZE);
+
+            // Get the request response code
             resCode = httpConnection.getResponseCode();
-            Utilities.Log(MODULE_NAME,"Response code - " +  resCode);
-            
+            Utilities.Log(MODULE_NAME, "Response code - " + resCode);
+
             // Check the http response code(200 or 206)
-            if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_PARTIAL){
+            if (resCode == HttpURLConnection.HTTP_OK || resCode == HttpURLConnection.HTTP_PARTIAL) {
 
                 byte[] data = new byte[CHUNK_SIZE];
-                Utilities.Log(MODULE_NAME,"getting data from request");
+                Utilities.Log(MODULE_NAME, "getting data from request");
 
                 in = httpConnection.getInputStream();
-                
+
                 // Loop over the response data
-                while((dataSize = in.read(data))!= -1)
-                {
-                	tokenBucket.take(dataSize); // Token availability
+                while ((dataSize = in.read(data)) != -1) {
+                    tokenBucket.take(dataSize); // Token availability
                     Chunk chunk = new Chunk(data, offset, dataSize); // A chunk of data read
                     outQueue.put(chunk); // Put the data in the queue
                     offset += dataSize; // Change the next data offset
                 }
             }
-            
+
             return 1;
-            
+
         } catch (Exception e) {
-        	Utilities.Log(MODULE_NAME,"There was an exception during reading data from stream - " + e.getMessage());
-        	return 0;
-		} finally {
-			in.close();
-			httpConnection.disconnect();
-		}
+            Utilities.Log(MODULE_NAME, "There was an exception during reading data from stream - " + e.getMessage());
+            return 0;
+        } finally {
+            in.close();
+            httpConnection.disconnect();
+        }
     }
 
     @Override

@@ -6,7 +6,7 @@
  */
 public class RateLimiter implements Runnable {
 
-    private static final int RATE_IN_MILLISECOND= 1000;
+    private static final int RATE_IN_MILLISECOND = 1000;
     private final TokenBucket tokenBucket;
     private final Long maxBytesPerSecond;
 
@@ -17,8 +17,8 @@ public class RateLimiter implements Runnable {
 
     @Override
     public void run() {
-    	System.out.println("HEREEEEEEEEEEEEEEEEEEEEEEEEEE");
-        while(!tokenBucket.terminated()){
+        System.out.println("HEREEEEEEEEEEEEEEEEEEEEEEEEEE");
+        while (!tokenBucket.terminated()) {
             try {
                 Thread.sleep(RATE_IN_MILLISECOND);
 //                System.out.println("Adding tokens - " + maxBytesPerSecond);

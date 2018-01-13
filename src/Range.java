@@ -20,24 +20,23 @@ class Range implements Serializable {
         return end;
     }
 
-    public static UnionResponse unionRanges(Range i_rangeOne, Range i_rangeTwo){
-
+    public static UnionResponse unionRanges(Range i_rangeOne, Range i_rangeTwo) {
         UnionResponse unionResponse;
         Range resRange = null;
         int resCode = 0;
-        Long diff = i_rangeOne.getStart() - i_rangeTwo.getStart();
+        Long rangeDifferences = i_rangeOne.getStart() - i_rangeTwo.getStart();
 
-        if(diff < 0){
-            if(i_rangeOne.getEnd() >= i_rangeTwo.getStart()){
+        if (rangeDifferences < 0) {
+            if (i_rangeOne.getEnd() >= i_rangeTwo.getStart()) {
                 resRange = new Range(i_rangeOne.getStart(), i_rangeTwo.getEnd());
-            }else{
+            } else {
                 // range two is bigger than range one
                 resCode = -1;
             }
-        }else{
-            if( i_rangeOne.getStart() <= i_rangeTwo.getEnd()){
-                resRange = new Range(i_rangeTwo.getStart(), i_rangeOne.getEnd() );
-            }else{
+        } else {
+            if (i_rangeOne.getStart() <= i_rangeTwo.getEnd()) {
+                resRange = new Range(i_rangeTwo.getStart(), i_rangeOne.getEnd());
+            } else {
                 // range one is bigger than range two
                 resCode = 1;
             }
@@ -51,13 +50,12 @@ class Range implements Serializable {
         return end - start;
     }
 
-    static class UnionResponse implements Serializable{
+    static class UnionResponse implements Serializable {
 
         private int m_resCode;
         private Range m_updatedRange;
 
-
-        UnionResponse( Range i_updatedRange, int i_res){
+        UnionResponse(Range i_updatedRange, int i_res) {
             this.m_resCode = i_res;
             this.m_updatedRange = i_updatedRange;
         }

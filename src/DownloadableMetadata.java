@@ -38,25 +38,25 @@ class DownloadableMetadata implements Serializable {
     }
 
     protected void addRange(Range range) {
-        int resCode;
+        int unionResponseCode;
         Range currentRange;
         m_sizeInBytes += range.getLength();
 
-        if(m_downLoadedRanges.size() == 0){
+        // adding first range
+        if (m_downLoadedRanges.size() == 0) {
             m_downLoadedRanges.add(range);
             return;
         }
 
-        for(int i=0; i < m_downLoadedRanges.size(); i++){
-
+        for (int i = 0; i < m_downLoadedRanges.size(); i++) {
             currentRange = m_downLoadedRanges.get(i);
-            Range.UnionResponse res = Range.unionRanges(currentRange, range);
-            resCode = res.get_res();
+            Range.UnionResponse unionResponse = Range.unionRanges(currentRange, range);
+            unionResponseCode = unionResponse.get_res();
 
-            switch (resCode){
+            switch (unionResponseCode) {
                 // range is bigger than current
                 case -1:
-                    if( i == m_downLoadedRanges.size() - 1) {
+                    if (i == m_downLoadedRanges.size() - 1) {
                         m_downLoadedRanges.add(range);
                         return;
                     }
@@ -67,14 +67,14 @@ class DownloadableMetadata implements Serializable {
                     return;
                 case 0:
                     // update the range to a new range
-                    m_downLoadedRanges.add(i,res.get_updatedRange());
-                    m_downLoadedRanges.remove(i+1);
+                    m_downLoadedRanges.add(i, unionResponse.get_updatedRange());
+                    m_downLoadedRanges.remove(i + 1);
                     return;
             }
         }
     }
 
-    protected long get_sizeInBytes(){
+    protected long get_sizeInBytes() {
         return m_sizeInBytes;
     }
 
@@ -87,28 +87,29 @@ class DownloadableMetadata implements Serializable {
     }
 
     protected boolean isCompleted() {
-        if (getMissingRanges().size() == 0){
+        if (getMissingRanges().size() == 0) {
             return true;
         }
         return false;
     }
 
     protected void delete() {
-        try{
+        try {
             File metadataFile = new File(metadataFilename);
 
-            if(metadataFile.delete()){
+            if (metadataFile.delete()) {
                 System.out.println(metadataFile.getName() + " is deleted!");
-            }else{
+            } else {
                 System.out.println("Delete operation has failed.");
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     protected ArrayList<Range> getMissingRanges() {
+        // if no metadata exist we initiate the one first range as the full file size
         if (m_downLoadedRanges.size() == 0) {
             ArrayList<Range> ranges = new ArrayList<Range>();
             ranges.add(new Range(0L, IdcDm.fileSize));
@@ -120,18 +121,19 @@ class DownloadableMetadata implements Serializable {
         Range currentMissingRange;
         long lastDownloadedByte;
         int index;
-        for( index= 1; index < m_downLoadedRanges.size(); index++){
-            if(m_downLoadedRanges.get(index-1).getEnd() < m_downLoadedRanges.get(index).getStart()){
-                currentMissingRange = new Range(m_downLoadedRanges.get(index-1).getEnd(),
+        // finding missing ranges
+        for (index = 1; index < m_downLoadedRanges.size(); index++) {
+            if (m_downLoadedRanges.get(index - 1).getEnd() < m_downLoadedRanges.get(index).getStart()) {
+                currentMissingRange = new Range(m_downLoadedRanges.get(index - 1).getEnd(),
                         m_downLoadedRanges.get(index).getStart());
                 m_missingRanges.add(currentMissingRange);
             }
         }
-
-        lastDownloadedByte = m_downLoadedRanges.get(index-1).getEnd();
-        if( lastDownloadedByte != fileSize){
+        // making sure we have all missing ranges
+        lastDownloadedByte = m_downLoadedRanges.get(index - 1).getEnd();
+        if (lastDownloadedByte != fileSize) {
             currentMissingRange = new Range(lastDownloadedByte,
-                                            fileSize);
+                    fileSize);
             m_missingRanges.add(currentMissingRange);
         }
         return m_missingRanges;

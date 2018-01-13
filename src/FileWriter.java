@@ -22,11 +22,10 @@ public class FileWriter implements Runnable {
     }
 
     private void writeChunks() throws IOException {
-        //TODO
-
+        // create tempFile
         String tempFileName = downloadableMetadata.getFilename() + ".tmp";
         File tempFile = new File(tempFileName);
-        if (!tempFile.exists()){
+        if (!tempFile.exists()) {
             tempFile.createNewFile();
         }
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + tempFileName);
@@ -34,55 +33,67 @@ public class FileWriter implements Runnable {
 
         String metadataFilename = downloadableMetadata.getMetadataFilename();
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
-
+        long fileSize = IdcDm.fileSize;
+        double progressPercentage = (int) (((double) downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
         try {
-            System.out.println("entering while loop");
-
-            long fileSize = IdcDm.fileSize;
-
-            double progressPercentage = (int) (((double)downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
-
+//            System.out.println("entering while loop");
             while (true) {
                 Chunk chunk = chunkQueue.take();
+                // stopping while at end of data
                 if (chunk.getOffset() == -1) {
                     System.out.println("Exiting FileWriter thread, " +
                             "end of data reached.");
                     break;
                 }
 
-                byte[] byteArray = chunk.getData();
-                randomAccessFile.seek(chunk.getOffset());
                 long chunkSize = chunk.getSize_in_bytes();
-                for (int i = 0; i < chunkSize; i++) {
-                    randomAccessFile.write(byteArray[i]);
-                }
+                writeDataToFile(randomAccessFile, chunk, chunkSize);
 
                 progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
-                Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
-                downloadableMetadata.addRange(range);
-                Utilities.Log(MODULE_NAME, "Range: " +range.getStart() + ":" + range.getEnd() + " was added");
-                FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
-                ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
-                metadataObjectOut.writeObject(downloadableMetadata);
-                //<TODO think of a better solution>
-                metadataObjectOut.close();
-                metadataFileOut.close();
+                addDownloadedRange(chunk, chunkSize);
+                updateMetadata(metadataFilename);
             }
             randomAccessFile.close();
 
-            // rename
-            String fileName = downloadableMetadata.getFilename();
-            File file = new File(fileName);
-            if (tempFile.renameTo(file)) {
-                System.out.println("File: " + tempFile.getName() + " renamed to: " + file.getName());
-            } else {
-                System.out.println("Sorry! the file: " + tempFile.getName() + " can't be renamed");
-            }
+            renameTempFile(tempFile);
 
             //<TODO choose sleep time>
             Thread.sleep(100);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void renameTempFile(File tempFile) {
+        String fileName = downloadableMetadata.getFilename();
+        File file = new File(fileName);
+        if (tempFile.renameTo(file)) {
+            System.out.println("File: " + tempFile.getName() + " renamed to: " + file.getName());
+        } else {
+            System.out.println("Sorry! the file: " + tempFile.getName() + " can't be renamed");
+        }
+    }
+
+    private void updateMetadata(String metadataFilename) throws IOException {
+        FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
+        ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
+        metadataObjectOut.writeObject(downloadableMetadata);
+        //<TODO think of a better solution>
+        metadataObjectOut.close();
+        metadataFileOut.close();
+    }
+
+    private void addDownloadedRange(Chunk chunk, long chunkSize) {
+        Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
+        downloadableMetadata.addRange(range);
+        Utilities.Log(MODULE_NAME, "Range: " + range.getStart() + ":" + range.getEnd() + " was added");
+    }
+
+    private void writeDataToFile(RandomAccessFile randomAccessFile, Chunk chunk, long chunkSize) throws IOException {
+        byte[] byteArray = chunk.getData();
+        randomAccessFile.seek(chunk.getOffset());
+        for (int i = 0; i < chunkSize; i++) {
+            randomAccessFile.write(byteArray[i]);
         }
     }
 
