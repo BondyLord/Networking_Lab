@@ -130,12 +130,12 @@ public class IdcDm {
 	
 	        if(maxBytesPerSecond != null)
 	        {
-	        	tokenBucket = new TokenBucket(fileSize, false);
+	        	tokenBucket = new TokenBucket( false);
 	        	rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
 	        }
 	        else
 	        {
-	        	tokenBucket = new TokenBucket(Integer.MAX_VALUE, true);
+	        	tokenBucket = new TokenBucket( true);
 	            rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
 	        }
 	
