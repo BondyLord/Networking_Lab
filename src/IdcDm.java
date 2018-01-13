@@ -10,13 +10,16 @@ import java.util.ArrayList;
 import java.util.concurrent.*;
 
 public class IdcDm {
+
     static final String MODULE_NAME = "IdcDm";
+    static final int SMALLEST_RANGE_SIZE = 4096;
     static long fileSize;
     static int numberOfWorkers;
     static Long maxBytesPerSecond;
     static String url;
     static int numberOfDownloadAttempts;
     static DownloadableMetadata downloadableMetadata;
+
 
     /**
      * Receive arguments from the command-line, provide some feedback and start the download.
@@ -113,7 +116,7 @@ public class IdcDm {
         
         if(fileSize != -1)
         {
-	        int chunkQueueSize = (int) Math.ceil((double) fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
+	        int chunkQueueSize = (int)fileSize; //round up
 	        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
 	
 	        BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
@@ -156,9 +159,6 @@ public class IdcDm {
         {
         	throw new Exception("this is an exception");
         }
-
-        // Finally, print "Download succeeded/failed" and delete the metadata as needed.
-        //printStatusAndDeleteMeta(downloadableMetadata, downloadStatus);
     }
 
 
@@ -255,5 +255,9 @@ public class IdcDm {
             httpConnection.disconnect();
         }
         return -1;
+    }
+
+    private int rangeMaximalNumberOfConnections(Range i_range){
+        return (int)Math.ceil((((double)i_range.getLength()) / SMALLEST_RANGE_SIZE));
     }
 }
