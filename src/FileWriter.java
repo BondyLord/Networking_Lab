@@ -51,26 +51,15 @@ public class FileWriter implements Runnable {
 
                 progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
                 addDownloadedRange(chunk, chunkSize);
+                //Utilities.Log(MODULE_NAME, "Range: " +range.getStart() + ":" + range.getEnd() + " was added");
                 updateMetadata(metadataFilename);
             }
+            
             randomAccessFile.close();
-
-            renameTempFile(tempFile);
-
             //<TODO choose sleep time>
             Thread.sleep(100);
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void renameTempFile(File tempFile) {
-        String fileName = downloadableMetadata.getFilename();
-        File file = new File(fileName);
-        if (tempFile.renameTo(file)) {
-            System.out.println("File: " + tempFile.getName() + " renamed to: " + file.getName());
-        } else {
-            System.out.println("Sorry! the file: " + tempFile.getName() + " can't be renamed");
         }
     }
 
@@ -86,7 +75,7 @@ public class FileWriter implements Runnable {
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
         Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
         downloadableMetadata.addRange(range);
-        Utilities.Log(MODULE_NAME, "Range: " + range.getStart() + ":" + range.getEnd() + " was added");
+        //Utilities.Log(MODULE_NAME, "Range: " + range.getStart() + ":" + range.getEnd() + " was added");
     }
 
     private void writeDataToFile(RandomAccessFile randomAccessFile, Chunk chunk, long chunkSize) throws IOException {
@@ -97,6 +86,16 @@ public class FileWriter implements Runnable {
         }
     }
 
+	public static void renameTmp(String fileName) {
+		File tmpFile = new File(fileName + ".tmp");
+		File file = new File(fileName);
+		if (tmpFile.renameTo(file)) {
+		    System.out.println("File: " + tmpFile + " renamed to: " + file.getName());
+		} else {
+		    System.out.println("Sorry! the file: " + tmpFile + " can't be renamed");
+		}
+	}
+    
     private double getUpdatedProgress(double progressPercentage, long chunkSize, long fileSize) {
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;

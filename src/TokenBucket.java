@@ -14,32 +14,47 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  */
 class TokenBucket {
-
-    //private final long pf_maxNumberOfTokens;
-    //private long pm_availableNumberOfTokens;
-
+    
     private AtomicLong pf_maxNumberOfTokens;
     private AtomicLong pm_availableNumberOfTokens;
-    private boolean pm_bucketIsTerminated = false;
-
-    protected TokenBucket(long i_maxNumberOfTokens) {
-        this.pf_maxNumberOfTokens = new AtomicLong(i_maxNumberOfTokens);
-        this.pm_availableNumberOfTokens = new AtomicLong(i_maxNumberOfTokens);
-        //this.pf_maxNumberOfTokens = i_maxNumberOfTokens;
-        //this.pm_availableNumberOfTokens= i_maxNumberOfTokens;
+    private boolean infinitTokens;
+    private boolean pm_bucketIsTerminated= false;
+    
+    protected TokenBucket(long i_maxNumberOfTokens, boolean infinitTokens) {
+    	this.infinitTokens = infinitTokens;
+    	this.pf_maxNumberOfTokens = new AtomicLong(i_maxNumberOfTokens);
+    	this.pm_availableNumberOfTokens = new AtomicLong(0);
     }
 
     protected void take(long tokens) {
-        System.out.println("Number of aviliable tokens - " + pm_availableNumberOfTokens.get());
-        while (pm_availableNumberOfTokens.get() - tokens < 0) {
+    	//long newTokenCount = pm_availableNumberOfTokens.get() - tokens;
+    	if(!infinitTokens)
+    	{
+	    	while(pm_availableNumberOfTokens.updateAndGet(value -> value >= tokens ? value - tokens : value) < tokens)
+	    	{
+	    		System.out.println("Sleeping!!!");
+	    		try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	    		
+	    	}
+	    	System.out.println("GOOD!!!");
+    	}
+    	/*
+        while(pm_availableNumberOfTokens.get() - tokens < 0){
+>>>>>>> Stashed changes
             try {
-                Thread.sleep(500); // Maybe implement the block in a different way
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
         pm_availableNumberOfTokens.set(pm_availableNumberOfTokens.get() - tokens);
+        */
 
     }
 
@@ -57,11 +72,16 @@ class TokenBucket {
         else
             pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
     }
-
-    void add(long tokens) {
-        if (pm_availableNumberOfTokens.get() + tokens <= pf_maxNumberOfTokens.get())
-            pm_availableNumberOfTokens.getAndAdd(tokens);
+    
+    void add(long tokens)
+    {
+    	pm_availableNumberOfTokens.getAndAdd(tokens);
+    	
+    	/*
+        if(pm_availableNumberOfTokens.get() + tokens <= pf_maxNumberOfTokens.get())
+        	pm_availableNumberOfTokens.getAndAdd(tokens);
         else
-            pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
-    }
+        	pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
+        */
+    	}
 }

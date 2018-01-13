@@ -1,6 +1,6 @@
 import Utill.Utilities;
 //<TODO remove import>
-import org.jetbrains.annotations.NotNull;
+//import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -12,15 +12,23 @@ import java.util.concurrent.*;
 public class IdcDm {
     static final String MODULE_NAME = "IdcDm";
     static long fileSize;
+    static int numberOfWorkers;
+    static Long maxBytesPerSecond;
+    static String url;
+    static int numberOfDownloadAttempts;
+    static DownloadableMetadata downloadableMetadata;
 
     /**
      * Receive arguments from the command-line, provide some feedback and start the download.
      *
      * @param args command-line arguments
+     * @throws InterruptedException 
      */
-    public static void main(String[] args) {
-        int numberOfWorkers = 1;
-        Long maxBytesPerSecond = null;
+    public static void main(String[] args) throws InterruptedException {
+        numberOfWorkers = 1;
+        maxBytesPerSecond = null;
+        numberOfDownloadAttempts = 0;
+        
 
         if (args.length < 1 || args.length > 3) {
             System.err.printf("usage:\n\tjava IdcDm URL [MAX-CONCURRENT-CONNECTIONS] [MAX-DOWNLOAD-LIMIT]\n");
@@ -31,7 +39,7 @@ public class IdcDm {
                 maxBytesPerSecond = Long.parseLong(args[2]);
         }
 
-        String url = args[0];
+        url = args[0];
 
         System.err.printf("Downloading");
         if (numberOfWorkers > 1)
@@ -40,7 +48,33 @@ public class IdcDm {
             System.err.printf(" limited to %d Bps", maxBytesPerSecond);
         System.err.printf("...\n");
 
-        DownloadURL(url, numberOfWorkers, maxBytesPerSecond);
+        downloadableMetadata = new DownloadableMetadata(url);
+        
+        while(!downloadableMetadata.isCompleted() && numberOfDownloadAttempts <= 3)
+        {
+        	numberOfDownloadAttempts++;
+        	
+        	try{
+            	Utilities.Log(MODULE_NAME, "Starting Download number - " + numberOfDownloadAttempts);
+            	DownloadURL(url, numberOfWorkers, maxBytesPerSecond);
+        	} catch (Exception e) {
+        		Utilities.Log(MODULE_NAME, "There was an exception during attempt number " + numberOfDownloadAttempts);
+        		Thread.sleep(4000);
+			}
+
+        }
+        
+        if(downloadableMetadata.isCompleted())
+        {
+        	FileWriter.renameTmp(downloadableMetadata.getFilename());
+            downloadableMetadata.delete();
+            System.out.println("Download success!");
+            
+        }
+            
+        else
+        	Utilities.Log(MODULE_NAME, "Exceded number of max trys - " + numberOfDownloadAttempts);
+        	
     }
 
     /**
@@ -54,10 +88,10 @@ public class IdcDm {
      * @param url               URL to download
      * @param numberOfWorkers   number of concurrent connections
      * @param maxBytesPerSecond limit on download bytes-per-second
+     * @throws Exception 
      */
-    private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) {
+    private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) throws Exception {
         // Initiate the file's metadata, and iterate over missing ranges. For each:
-        DownloadableMetadata downloadableMetadata = new DownloadableMetadata(url);
         File metadataFile = new File(downloadableMetadata.getMetadataFilename());
         if (metadataFile.exists()) {
             try {
@@ -79,62 +113,74 @@ public class IdcDm {
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         // FileSize is in Bytes.
         fileSize = getFileSize(url);
-        int chunkQueueSize = (int) Math.ceil((double) fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
-        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
-
-        BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
-        FileWriter fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
-        Thread fileWriterThread = new Thread(fileWriter);
-        Utilities.Log(MODULE_NAME, "starting fileWriterThread");
-        fileWriterThread.start();
-
-        TokenBucket tokenBucket = null;
-        RateLimiter rateLimiter = null;
-
-        if(maxBytesPerSecond != null)
+        
+        if(fileSize != -1)
         {
-            tokenBucket = new TokenBucket(maxBytesPerSecond);
-            rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
+	        int chunkQueueSize = (int) Math.ceil((double) fileSize / HTTPRangeGetter.CHUNK_SIZE); //round up
+	        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
+	
+	        BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
+	        FileWriter fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
+	        Thread fileWriterThread = new Thread(fileWriter);
+	        Utilities.Log(MODULE_NAME, "starting fileWriterThread");
+	        fileWriterThread.start();
+	
+	        TokenBucket tokenBucket = null;
+	        RateLimiter rateLimiter = null;
+	
+	        if(maxBytesPerSecond != null)
+	        {
+	        	tokenBucket = new TokenBucket(fileSize, false);
+	        	rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
+	        }
+	        else
+	        {
+	        	tokenBucket = new TokenBucket(Integer.MAX_VALUE, true);
+	            rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
+	        }
+	
+	        Thread rateLimiterThread = new Thread(rateLimiter);
+	        Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
+	        rateLimiterThread.start();
+	
+	        ExecutorService httpRangeGetterTPExecutor =
+	                executeHttpRangeGetterThreadPool(
+	                        url,
+	                        numberOfWorkers,
+	                        chunkQueueSize,
+	                        chunkQueue,
+	                        tokenBucket,
+	                        downloadableMetadata);
+	
+	        // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
+	        joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
         }
         else
         {
-            tokenBucket = new TokenBucket(Integer.MAX_VALUE);
-            rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
+        	throw new Exception("this is an exception");
         }
 
-        Thread rateLimiterThread = new Thread(rateLimiter);
-        Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
-        rateLimiterThread.start();
-
-        ArrayList<Range> ranges = downloadableMetadata.getMissingRanges();
-        ExecutorService httpRangeGetterTPExecutor =
-                executeHttpRangeGetterThreadPool(
-                        url,
-                        numberOfWorkers,
-                        chunkQueueSize,
-                        chunkQueue,
-                        tokenBucket,
-                        ranges);
-
-        // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
-        joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
-
         // Finally, print "Download succeeded/failed" and delete the metadata as needed.
-        printStatusAndDeleteMeta(downloadableMetadata, downloadStatus);
+        //printStatusAndDeleteMeta(downloadableMetadata, downloadStatus);
     }
 
-    @NotNull
+
+    //@NotNull
     private static ExecutorService executeHttpRangeGetterThreadPool(
             String url,
             int numberOfWorkers,
             int chunkQueueSize,
             BlockingQueue<Chunk> chunkQueue, TokenBucket tokenBucket,
-            ArrayList<Range> ranges) {
+            DownloadableMetadata downloadableMetadata) {
+    	
+        ArrayList<Range> ranges;
         ExecutorService httpRangeGetterTPExecutor = Executors.newFixedThreadPool(numberOfWorkers);
         long rangeChunkSize = 0;
         long startRange = 0L;
         long endRange = 0L;
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
+    	ranges = downloadableMetadata.getMissingRanges();
+    
         for (Range mainRange: ranges) {
             rangeChunkSize = (int) Math.ceil(((double)mainRange.getLength() / numberOfWorkers));
             startRange = mainRange.getStart();
@@ -160,17 +206,14 @@ public class IdcDm {
             }
 
         }
+        
         return httpRangeGetterTPExecutor;
     }
 
-    private static void printStatusAndDeleteMeta(
-            DownloadableMetadata downloadableMetadata,
-            String downloadStatus) {
-        if (downloadableMetadata.isCompleted()){
-            downloadStatus = "succeeded";
+    private static void printStatusAndDeleteMeta(DownloadableMetadata downloadableMetadata) 
+    {
             downloadableMetadata.delete();
-        }
-        System.out.println("Download " + downloadStatus);
+            System.out.println("Download success!");        
     }
 
     private static void joinThreads(
@@ -212,8 +255,8 @@ public class IdcDm {
             return httpConnection.getContentLength();
         } catch (MalformedURLException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            //e.printStackTrace();
         } finally {
             httpConnection.disconnect();
         }

@@ -17,11 +17,9 @@ public class RateLimiter implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("HEREEEEEEEEEEEEEEEEEEEEEEEEEE");
-        while (!tokenBucket.terminated()) {
+        while(!tokenBucket.terminated()){
             try {
                 Thread.sleep(RATE_IN_MILLISECOND);
-//                System.out.println("Adding tokens - " + maxBytesPerSecond);
                 tokenBucket.add(maxBytesPerSecond);
             } catch (InterruptedException e) {
                 e.printStackTrace();
