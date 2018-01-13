@@ -1,7 +1,4 @@
 import Utill.Utilities;
-//<TODO remove import>
-//import org.jetbrains.annotations.NotNull;
-
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -12,7 +9,7 @@ import java.util.concurrent.*;
 public class IdcDm {
 
     static final String MODULE_NAME = "IdcDm";
-    static final int SMALLEST_RANGE_SIZE = 4096;
+    static final int SMALLEST_RANGE_SIZE = 40960;
     static long fileSize;
     static int numberOfWorkers;
     static Long maxBytesPerSecond;
@@ -56,15 +53,15 @@ public class IdcDm {
         while(!downloadableMetadata.isCompleted() && numberOfDownloadAttempts <= 3)
         {
         	numberOfDownloadAttempts++;
-        	
-        	try{
-            	Utilities.Log(MODULE_NAME, "Starting Download number - " + numberOfDownloadAttempts);
+        	if(numberOfDownloadAttempts > 1){
+                System.out.println("Recovering Failed Data - attempt number: " + numberOfDownloadAttempts);
+            }
+            try{
             	DownloadURL(url, numberOfWorkers, maxBytesPerSecond);
         	} catch (Exception e) {
         		Utilities.Log(MODULE_NAME, "There was an exception during attempt number " + numberOfDownloadAttempts);
         		Thread.sleep(4000);
 			}
-
         }
         
         if(downloadableMetadata.isCompleted())
@@ -168,21 +165,28 @@ public class IdcDm {
             int numberOfWorkers,
             int chunkQueueSize,
             BlockingQueue<Chunk> chunkQueue, TokenBucket tokenBucket,
-            DownloadableMetadata downloadableMetadata) {
-    	
+            DownloadableMetadata downloadableMetadata)
+    {
         ArrayList<Range> ranges;
         ExecutorService httpRangeGetterTPExecutor = Executors.newFixedThreadPool(numberOfWorkers);
+        int relevantNumberOfWorkers;
+        int maxNumberOfWorkers;
         long rangeChunkSize = 0;
         long startRange = 0L;
         long endRange = 0L;
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
     	ranges = downloadableMetadata.getMissingRanges();
         for (Range mainRange: ranges) {
-            rangeChunkSize = (int) Math.ceil(((double)mainRange.getLength() / numberOfWorkers));
+            maxNumberOfWorkers = rangeMaximalNumberOfConnections(mainRange);
+            relevantNumberOfWorkers =
+                    (maxNumberOfWorkers >= numberOfWorkers ?
+                    numberOfWorkers : maxNumberOfWorkers );
+            Utilities.Log(MODULE_NAME,"Set relevant number of workers: " + relevantNumberOfWorkers);
+            rangeChunkSize = (int) Math.ceil(((double)mainRange.getLength() / relevantNumberOfWorkers));
             startRange = mainRange.getStart();
             endRange = startRange + rangeChunkSize;
 
-            for (int i = 0; i < numberOfWorkers; i++) {
+            for (int i = 0; i < relevantNumberOfWorkers; i++) {
                 Utilities.Log(MODULE_NAME, "Starting a HTTPRangeGetter thread with ranges:");
                 Utilities.Log(MODULE_NAME, "startRange: " + startRange);
                 Utilities.Log(MODULE_NAME, "endRange: " + endRange);
@@ -191,7 +195,7 @@ public class IdcDm {
                 HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
                 httpRangeGetterTPExecutor.execute(httpRangeGetter);
                 startRange = endRange + 1;
-                if( i == numberOfWorkers - 2){
+                if( i == relevantNumberOfWorkers - 2){
                     endRange = mainRange.getEnd();
                 }
                 else{
@@ -257,7 +261,7 @@ public class IdcDm {
         return -1;
     }
 
-    private int rangeMaximalNumberOfConnections(Range i_range){
+    private static int rangeMaximalNumberOfConnections(Range i_range){
         return (int)Math.ceil((((double)i_range.getLength()) / SMALLEST_RANGE_SIZE));
     }
 }
