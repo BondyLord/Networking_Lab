@@ -1,3 +1,5 @@
+import Utill.Utilities;
+
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ class DownloadableMetadata implements Serializable {
     private ArrayList<Range> m_downLoadedRanges;
     private ArrayList<Range> m_missingRanges;
     private long m_sizeInBytes;
+    private static String MODULE_NAME="DownloadableMetadata";
 
     DownloadableMetadata(String url) {
 
@@ -98,9 +101,9 @@ class DownloadableMetadata implements Serializable {
             File metadataFile = new File(metadataFilename);
 
             if (metadataFile.delete()) {
-                System.out.println(metadataFile.getName() + " is deleted!");
+                Utilities.Log(MODULE_NAME,metadataFile.getName() + " is deleted!");
             } else {
-                System.out.println("Delete operation has failed.");
+                Utilities.Log(MODULE_NAME,"Delete operation has failed.");
             }
 
         } catch (Exception e) {

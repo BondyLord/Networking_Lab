@@ -32,7 +32,6 @@ class TokenBucket {
     	{
 	    	while(pm_availableNumberOfTokens.updateAndGet(value -> value >= tokens ? value - tokens : value) < tokens)
 	    	{
-	    		System.out.println("Sleeping!!!");
 	    		try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
@@ -41,21 +40,7 @@ class TokenBucket {
 				}
 	    		
 	    	}
-	    	System.out.println("GOOD!!!");
     	}
-    	/*
-        while(pm_availableNumberOfTokens.get() - tokens < 0){
->>>>>>> Stashed changes
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        pm_availableNumberOfTokens.set(pm_availableNumberOfTokens.get() - tokens);
-        */
-
     }
 
     protected void terminate() {

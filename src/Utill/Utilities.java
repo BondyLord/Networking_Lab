@@ -13,7 +13,7 @@ public class Utilities {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String logMessage = timeStamp + " " + sdf.format(cal.getTime())+" - " + i_moduleName + " " + i_Message;
-        System.out.println(logMessage);
+       // System.out.println(logMessage);
     }
 
     // Error Log format for tracking and debugging
@@ -23,7 +23,7 @@ public class Utilities {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String logMessage = timeStamp + " " + sdf.format(cal.getTime())+" - " + i_moduleName + " " + i_Message;
-        System.err.println(logMessage);
+        //System.err.println(logMessage);
     }
 
 }

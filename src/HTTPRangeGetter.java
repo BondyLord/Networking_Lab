@@ -47,17 +47,25 @@ public class HTTPRangeGetter implements Runnable {
         httpConnection.setRequestMethod("GET");
         httpConnection.setReadTimeout(READ_TIMEOUT);
         httpConnection.setConnectTimeout(CONNECT_TIMEOUT);
+        httpConnection.setRequestProperty("Connection", "Keep-Alive");
+        httpConnection.setRequestProperty("Keep-Alive", "header");
 
         // Set the range property
         rangRequestProperty = String.format("bytes=%d-%d", startRange, endRange);
         httpConnection.setRequestProperty("Range", rangRequestProperty);
         Utilities.Log(MODULE_NAME, "range request - " + rangRequestProperty);
-
+        httpConnection.connect();
         // Download the data in the given range
         downloadData(httpConnection, startRange);
     }
 
-    private int downloadData(HttpURLConnection httpConnection, long offset) throws IOException {
+    private void downloadData(
+            HttpURLConnection httpConnection,
+            long offset)
+            throws
+            IOException,
+            InterruptedException
+    {
 
         int resCode = 0;
         int dataSize = 0;
@@ -89,19 +97,19 @@ public class HTTPRangeGetter implements Runnable {
                 }
             }
 
-            return 1;
-
         } catch (Exception e) {
             Utilities.Log(MODULE_NAME, "There was an exception during reading data from stream - " + e.getMessage());
-            return 0;
+            throw(e);
         } finally {
-            in.close();
+            if (in != null){
+                in.close();
+            }
             httpConnection.disconnect();
         }
     }
 
     @Override
-    public void run() {
+    public void run(){
         try {
             this.downloadRange();
         } catch (IOException | InterruptedException e) {

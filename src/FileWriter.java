@@ -41,7 +41,7 @@ public class FileWriter implements Runnable {
                 Chunk chunk = chunkQueue.take();
                 // stopping while at end of data
                 if (chunk.getOffset() == -1) {
-                    System.out.println("Exiting FileWriter thread, " +
+                    Utilities.Log(MODULE_NAME,"Exiting FileWriter thread, " +
                             "end of data reached.");
                     break;
                 }
@@ -64,12 +64,12 @@ public class FileWriter implements Runnable {
     }
 
     private void updateMetadata(String metadataFilename) throws IOException {
-        FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename);
+        FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename + ".tmp");
         ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
         metadataObjectOut.writeObject(downloadableMetadata);
-        //<TODO think of a better solution>
         metadataObjectOut.close();
         metadataFileOut.close();
+        renameTmp(metadataFilename);
     }
 
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
@@ -90,9 +90,9 @@ public class FileWriter implements Runnable {
 		File tmpFile = new File(fileName + ".tmp");
 		File file = new File(fileName);
 		if (tmpFile.renameTo(file)) {
-		    System.out.println("File: " + tmpFile + " renamed to: " + file.getName());
+		    Utilities.Log(MODULE_NAME,"File: " + tmpFile + " renamed to: " + file.getName());
 		} else {
-		    System.out.println("Sorry! the file: " + tmpFile + " can't be renamed");
+            Utilities.Log(MODULE_NAME,"Sorry! the file: " + tmpFile + " can't be renamed");
 		}
 	}
     

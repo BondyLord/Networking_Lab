@@ -69,12 +69,9 @@ public class IdcDm {
         	FileWriter.renameTmp(downloadableMetadata.getFilename());
             downloadableMetadata.delete();
             System.out.println("Download success!");
-            
         }
-            
         else
         	Utilities.Log(MODULE_NAME, "Exceded number of max trys - " + numberOfDownloadAttempts);
-        	
     }
 
     /**
@@ -180,7 +177,6 @@ public class IdcDm {
         long endRange = 0L;
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
     	ranges = downloadableMetadata.getMissingRanges();
-    
         for (Range mainRange: ranges) {
             rangeChunkSize = (int) Math.ceil(((double)mainRange.getLength() / numberOfWorkers));
             startRange = mainRange.getStart();
@@ -193,7 +189,7 @@ public class IdcDm {
 
                 Range range = new Range(startRange, endRange);
                 HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
-
+                httpRangeGetterTPExecutor.execute(httpRangeGetter);
                 startRange = endRange + 1;
                 if( i == numberOfWorkers - 2){
                     endRange = mainRange.getEnd();
@@ -202,7 +198,6 @@ public class IdcDm {
                     endRange += rangeChunkSize;
                 }
                 Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
-                httpRangeGetterTPExecutor.execute(httpRangeGetter);
             }
 
         }
@@ -251,7 +246,6 @@ public class IdcDm {
             httpConnection = (HttpURLConnection) url.openConnection();
             // can ask for content length only...
             httpConnection.setRequestMethod("HEAD");
-            httpConnection.getInputStream();
             return httpConnection.getContentLength();
         } catch (MalformedURLException e) {
             e.printStackTrace();
