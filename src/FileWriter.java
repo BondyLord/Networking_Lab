@@ -61,13 +61,26 @@ public class FileWriter implements Runnable {
     }
 
     private void updateMetadata(String metadataFilename) throws IOException {
-        FileOutputStream metadataFileOut = new FileOutputStream(metadataFilename + ".tmp");
-        ObjectOutput metadataObjectOut = new ObjectOutputStream(metadataFileOut);
-        metadataObjectOut.writeObject(downloadableMetadata);
-        metadataObjectOut.close();
-        metadataFileOut.close();
-        // to handle corrupted temp file - renaming metadata.tmp file to metadata after writing
-        renameTmp(metadataFilename);
+    	FileOutputStream metadataFileOut = null;
+    	ObjectOutput metadataObjectOut = null;
+    	
+    	try{
+            metadataFileOut = new FileOutputStream(metadataFilename + ".tmp");
+            metadataObjectOut = new ObjectOutputStream(metadataFileOut);
+            metadataObjectOut.writeObject(downloadableMetadata);
+            metadataObjectOut.close();
+            metadataFileOut.close();
+            // to handle corrupted temp file - renaming metadata.tmp file to metadata after writing
+            renameTmp(metadataFilename);
+    		
+    	}catch (Exception e) {
+			if(metadataObjectOut != null)
+				metadataObjectOut.close();
+			if(metadataFileOut != null)
+				metadataFileOut.close();
+				
+		}
+
     }
 
     private void addDownloadedRange(Chunk chunk, long chunkSize) {

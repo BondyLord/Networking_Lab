@@ -7,6 +7,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
+import com.sun.xml.internal.ws.api.addressing.WSEndpointReference.Metadata;
+
 public class IdcDm {
 
     static final String MODULE_NAME = "IdcDm";
@@ -98,12 +100,15 @@ public class IdcDm {
     private static void DownloadURL(String url, int numberOfWorkers, Long maxBytesPerSecond) throws Exception {
         // Initiate the file's metadata, and iterate over missing ranges. For each:
         File metadataFile = new File(downloadableMetadata.getMetadataFilename());
+        InputStream readMetaDateFile = null;
+        ObjectInput metaData = null;
+        
         if (metadataFile.exists()) {
             try {
                 Utilities.Log(MODULE_NAME, "Resume Download");
                 Utilities.Log(MODULE_NAME, "Reading meta data file...");
-                InputStream readMetaDateFile = new FileInputStream(metadataFile);
-                ObjectInput metaData = new ObjectInputStream(readMetaDateFile);
+                readMetaDateFile = new FileInputStream(metadataFile);
+                metaData = new ObjectInputStream(readMetaDateFile);
                 downloadableMetadata = (DownloadableMetadata) metaData.readObject();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -111,7 +116,10 @@ public class IdcDm {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-            }
+            } finally {
+            	readMetaDateFile.close();
+            	metaData.close();
+			}
         }
 
         //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
