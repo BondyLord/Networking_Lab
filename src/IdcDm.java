@@ -61,6 +61,7 @@ public class IdcDm {
         File metadataFile = new File(downloadableMetadata.getMetadataFilename());
         if (metadataFile.exists()) {
             try {
+                Utilities.Log(MODULE_NAME, "Resume Download");
                 Utilities.Log(MODULE_NAME, "Reading meta data file...");
                 InputStream readMetaDateFile = new FileInputStream(metadataFile);
                 ObjectInput metaData = new ObjectInputStream(readMetaDateFile);

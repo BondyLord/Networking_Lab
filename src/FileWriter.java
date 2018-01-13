@@ -40,7 +40,7 @@ public class FileWriter implements Runnable {
 
             long fileSize = IdcDm.fileSize;
 
-            double progressPercentage = (int) (downloadableMetadata.get_sizeInBytes() / fileSize);
+            double progressPercentage = (int) (((double)downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
 
             while (true) {
                 Chunk chunk = chunkQueue.take();
