@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 public class IdcDm {
 
     static final String MODULE_NAME = "IdcDm";
-    static final int SMALLEST_RANGE_SIZE = 40960;
+    static final int SMALLEST_RANGE_SIZE = 409600;
     static long fileSize;
     static int numberOfWorkers;
     static Long maxBytesPerSecond;
