@@ -27,15 +27,13 @@ class TokenBucket {
     }
 
     protected void take(long tokens) {
-    	//long newTokenCount = pm_availableNumberOfTokens.get() - tokens;
     	if(!infinitTokens)
     	{
 	    	while(pm_availableNumberOfTokens.updateAndGet(value -> value >= tokens ? value - tokens : value) < tokens)
 	    	{
 	    		try {
-					Thread.sleep(500);
+					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 	    		
@@ -50,23 +48,9 @@ class TokenBucket {
     boolean terminated() {
         return pm_bucketIsTerminated;
     }
-
-    void set(long tokens) {
-        if (tokens <= pf_maxNumberOfTokens.get())
-            pm_availableNumberOfTokens.set(tokens);
-        else
-            pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
-    }
     
     void add(long tokens)
     {
     	pm_availableNumberOfTokens.getAndAdd(tokens);
-    	
-    	/*
-        if(pm_availableNumberOfTokens.get() + tokens <= pf_maxNumberOfTokens.get())
-        	pm_availableNumberOfTokens.getAndAdd(tokens);
-        else
-        	pm_availableNumberOfTokens.set(pf_maxNumberOfTokens.get());
-        */
     	}
 }
