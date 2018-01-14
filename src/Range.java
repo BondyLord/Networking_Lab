@@ -4,7 +4,7 @@ import java.io.Serializable;
  * Describes a simple range, with a start, an end, and a length
  */
 class Range implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     private long start;
     private long end;
 
@@ -23,26 +23,26 @@ class Range implements Serializable {
 
     static UnionResponse unionRanges(Range i_rangeOne, Range i_rangeTwo) {
         UnionResponse unionResponse;
-        Range resRange = null;
+        Range unitedRange = null;
         int resCode = 0;
         Long rangeDifferences = i_rangeOne.getStart() - i_rangeTwo.getStart();
-
+        // uniting ranges
         if (rangeDifferences < 0) {
             if (i_rangeOne.getEnd() >= i_rangeTwo.getStart()) {
-                resRange = new Range(i_rangeOne.getStart(), i_rangeTwo.getEnd());
+                unitedRange = new Range(i_rangeOne.getStart(), i_rangeTwo.getEnd());
             } else {
                 // range two is bigger than range one
                 resCode = -1;
             }
         } else {
             if (i_rangeOne.getStart() <= i_rangeTwo.getEnd()) {
-                resRange = new Range(i_rangeTwo.getStart(), i_rangeOne.getEnd());
+                unitedRange = new Range(i_rangeTwo.getStart(), i_rangeOne.getEnd());
             } else {
                 // range one is bigger than range two
                 resCode = 1;
             }
         }
-        unionResponse = new UnionResponse(resRange, resCode);
+        unionResponse = new UnionResponse(unitedRange, resCode);
         return unionResponse;
     }
 
@@ -51,7 +51,7 @@ class Range implements Serializable {
     }
 
     static class UnionResponse implements Serializable {
-    	private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
         private int m_resCode;
         private Range m_updatedRange;
 

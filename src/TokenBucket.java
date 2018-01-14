@@ -1,6 +1,6 @@
-import java.util.concurrent.atomic.AtomicLong;
-
 import Utill.Utilities;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A Token Bucket (https://en.wikipedia.org/wiki/Token_bucket)
@@ -20,8 +20,8 @@ class TokenBucket {
     private boolean pm_bucketIsTerminated = false;
     private static final String MODULE_NAME = "TokenBucket";
 
-    TokenBucket(boolean infinitTokens) {
-        this.infinitTokens = infinitTokens;
+    TokenBucket(boolean infinityTokens) {
+        this.infinitTokens = infinityTokens;
         this.pm_availableNumberOfTokens = new AtomicLong(0);
     }
 
@@ -33,7 +33,7 @@ class TokenBucket {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                	Utilities.Log(MODULE_NAME,"Interrupted Exception while sleep");
+                    Utilities.Log(MODULE_NAME, "Interrupted Exception while sleep");
                 }
             }
         }

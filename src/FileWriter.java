@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * This class takes chunks from the queue, writes them to disk and updates the file's metadata.
- * <p>
+ *
  * NOTE: make sure that the file interface you choose writes every update to the file's content or metadata
  * synchronously to the underlying storage device.
  */
@@ -27,13 +27,14 @@ public class FileWriter implements Runnable {
         String tempFileName = downloadableMetadata.getFilename() + ".tmp";
         File tempFile = new File(tempFileName);
         if (!tempFile.createNewFile()) {
-            Utilities.Log(MODULE_NAME,"Temp file exists... ");
+            Utilities.Log(MODULE_NAME, "Temp file exists... ");
         }
-        Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + tempFileName);
         RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile.getPath(), "rw");
+        Utilities.Log(MODULE_NAME, "open RandomAccessFile for Writing to file: " + tempFileName);
 
         String metadataFilename = downloadableMetadata.getMetadataFilename();
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
+        // using downloadableMetadata object to get current downloaded percentage
         long fileSize = IdcDm.fileSize;
         double progressPercentage = (int) (((double) downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
         try {
@@ -60,25 +61,26 @@ public class FileWriter implements Runnable {
     }
 
     private void updateMetadata(String metadataFilename) throws IOException {
-    	FileOutputStream metadataFileOut = null;
-    	ObjectOutput metadataObjectOut = null;
-    	
-    	try{
+        FileOutputStream metadataFileOut = null;
+        ObjectOutput metadataObjectOut = null;
+
+        try {
             metadataFileOut = new FileOutputStream(metadataFilename + ".tmp");
             metadataObjectOut = new ObjectOutputStream(metadataFileOut);
             metadataObjectOut.writeObject(downloadableMetadata);
             metadataObjectOut.close();
+
             metadataFileOut.close();
-            
+
             // to handle corrupted temp file - renaming metadata.tmp file to metadata after writing
             renameTmp(metadataFilename);
-    		
-    	}catch (Exception e) {
-			if(metadataObjectOut != null)
-				metadataObjectOut.close();
-			if(metadataFileOut != null)
-				metadataFileOut.close();	
-		}
+
+        } catch (Exception e) {
+            if (metadataObjectOut != null)
+                metadataObjectOut.close();
+            if (metadataFileOut != null)
+                metadataFileOut.close();
+        }
     }
 
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
@@ -107,8 +109,8 @@ public class FileWriter implements Runnable {
         }
     }
 
-    // Update and write the download progress percentage
     private double getUpdatedProgress(double progressPercentage, long chunkSize, long fileSize) {
+        // Update and write the download progress percentage
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
         int progressPercentageAfter = (int) progressPercentage;
@@ -123,7 +125,7 @@ public class FileWriter implements Runnable {
         try {
             this.writeChunks();
         } catch (IOException e) {
-        	Utilities.Log(MODULE_NAME, "FileWriter error " + e.getMessage());
+            Utilities.Log(MODULE_NAME, "FileWriter error " + e.getMessage());
         }
     }
 }
