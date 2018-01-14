@@ -17,12 +17,12 @@ class TokenBucket {
     private boolean infinitTokens;
     private boolean pm_bucketIsTerminated = false;
 
-    protected TokenBucket(boolean infinitTokens) {
+    TokenBucket(boolean infinitTokens) {
         this.infinitTokens = infinitTokens;
         this.pm_availableNumberOfTokens = new AtomicLong(0);
     }
 
-    protected void take(long tokens) {
+    void take(long tokens) {
         if (!infinitTokens) // Check for infinite mode, no limit exist
         {
             // If tokens are available, give them back to the user, else wait for tokens to increase
@@ -38,7 +38,7 @@ class TokenBucket {
     }
 
     // Set termination status
-    protected void terminate() {
+    void terminate() {
         pm_bucketIsTerminated = true;
     }
 

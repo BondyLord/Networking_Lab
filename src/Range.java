@@ -20,7 +20,7 @@ class Range implements Serializable {
         return end;
     }
 
-    public static UnionResponse unionRanges(Range i_rangeOne, Range i_rangeTwo) {
+    static UnionResponse unionRanges(Range i_rangeOne, Range i_rangeTwo) {
         UnionResponse unionResponse;
         Range resRange = null;
         int resCode = 0;
@@ -43,7 +43,6 @@ class Range implements Serializable {
         }
         unionResponse = new UnionResponse(resRange, resCode);
         return unionResponse;
-
     }
 
     long getLength() {
@@ -60,11 +59,11 @@ class Range implements Serializable {
             this.m_updatedRange = i_updatedRange;
         }
 
-        public int get_res() {
+        int get_res() {
             return m_resCode;
         }
 
-        public Range get_updatedRange() {
+        Range get_updatedRange() {
             return m_updatedRange;
         }
     }

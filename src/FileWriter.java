@@ -12,7 +12,7 @@ import java.util.concurrent.BlockingQueue;
  */
 public class FileWriter implements Runnable {
 
-    static final String MODULE_NAME = "FileWriter";
+    private static final String MODULE_NAME = "FileWriter";
 
     private final BlockingQueue<Chunk> chunkQueue;
     private DownloadableMetadata downloadableMetadata;
@@ -26,8 +26,8 @@ public class FileWriter implements Runnable {
         // create tempFile
         String tempFileName = downloadableMetadata.getFilename() + ".tmp";
         File tempFile = new File(tempFileName);
-        if (!tempFile.exists()) {
-            tempFile.createNewFile();
+        if (!tempFile.createNewFile()) {
+            Utilities.Log(MODULE_NAME,"Temp file exists... ");
         }
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + tempFileName);
         RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile.getPath(), "rw");
@@ -96,7 +96,7 @@ public class FileWriter implements Runnable {
         }
     }
 
-    public static void renameTmp(String fileName) {
+    static void renameTmp(String fileName) {
         File tmpFile = new File(fileName + ".tmp");
         if (tmpFile.exists()) {
             File file = new File(fileName);

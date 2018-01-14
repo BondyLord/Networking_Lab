@@ -13,7 +13,7 @@ import java.util.concurrent.BlockingQueue;
  */
 public class HTTPRangeGetter implements Runnable {
 
-    static final String MODULE_NAME = "HTTPRangeGetter";
+    private static final String MODULE_NAME = "HTTPRangeGetter";
     static final int CHUNK_SIZE = 4096;
     private static final int CONNECT_TIMEOUT = 500;
     private static final int READ_TIMEOUT = 2000;
@@ -64,8 +64,8 @@ public class HTTPRangeGetter implements Runnable {
             IOException,
             InterruptedException {
 
-        int resCode = 0;
-        int dataSize = 0;
+        int resCode;
+        int dataSize;
         InputStream in = null;
 
         try {

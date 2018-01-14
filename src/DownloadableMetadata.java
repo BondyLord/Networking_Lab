@@ -3,6 +3,7 @@ import Utill.Utilities;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Describes a file's metadata: URL, file name, size, and which parts already downloaded to disk.
@@ -16,20 +17,21 @@ import java.util.ArrayList;
 class DownloadableMetadata implements Serializable {
 
     private final String metadataFilename;
+    private static final String MODULE_NAME="DownloadableMetadata";
     private String filename;
-    private String url;
     private ArrayList<Range> m_downLoadedRanges;
     private ArrayList<Range> m_missingRanges;
     private long m_sizeInBytes;
-    private static String MODULE_NAME="DownloadableMetadata";
+    private AtomicBoolean m_updateFlag;
 
     DownloadableMetadata(String url) {
 
         this.filename = getName(url);
         this.metadataFilename = getMetadataName(filename);
-        this.m_downLoadedRanges = new ArrayList<Range>();
+        this.m_downLoadedRanges = new ArrayList<>();
         this.m_missingRanges = null;
         this.m_sizeInBytes = 0;
+        this.m_updateFlag = new AtomicBoolean(false);
     }
 
     private static String getMetadataName(String filename) {
@@ -40,7 +42,7 @@ class DownloadableMetadata implements Serializable {
         return path.substring(path.lastIndexOf('/') + 1, path.length());
     }
 
-    protected void addRange(Range range) {
+    void addRange(Range range) {
         int unionResponseCode;
         Range currentRange;
         m_sizeInBytes += range.getLength();
@@ -77,26 +79,32 @@ class DownloadableMetadata implements Serializable {
         }
     }
 
-    protected long get_sizeInBytes() {
+    long get_sizeInBytes() {
         return m_sizeInBytes;
     }
 
-    protected String getFilename() {
+    String getFilename() {
         return filename;
     }
 
-    protected String getMetadataFilename() {
+    String getMetadataFilename() {
         return metadataFilename;
     }
 
-    protected boolean isCompleted() {
-        if (getMissingRanges().size() == 0) {
-            return true;
+    boolean isCompleted() {
+        // Return true without computing missing ranges in the case
+        // Missing Ranges was already computed.
+        int numberOfMissingRanges;
+        if(m_updateFlag.get() || m_missingRanges == null){
+            numberOfMissingRanges = getMissingRanges().size();
+        }else{
+            numberOfMissingRanges = m_missingRanges.size();
         }
-        return false;
+
+        return numberOfMissingRanges == 0;
     }
 
-    protected void delete() {
+    void delete() {
         try {
             File metadataFile = new File(metadataFilename);
             if (metadataFile.delete()) {
@@ -110,38 +118,39 @@ class DownloadableMetadata implements Serializable {
         }
     }
 
-    protected ArrayList<Range> getMissingRanges() {
+    ArrayList<Range> getMissingRanges() {
+
+        ArrayList<Range> ranges;
+
         // if no metadata exist we initiate the one first range as the full file size
         if (m_downLoadedRanges.size() == 0) {
-            ArrayList<Range> ranges = new ArrayList<Range>();
+            ranges = new ArrayList<>();
             ranges.add(new Range(0L, IdcDm.fileSize));
-            return ranges;
-        }
-
-        long fileSize = IdcDm.fileSize;
-        m_missingRanges = new ArrayList<Range>();
-        Range currentMissingRange;
-        long lastDownloadedByte;
-        int index;
-        // finding missing ranges
-        for (index = 1; index < m_downLoadedRanges.size(); index++) {
-            if (m_downLoadedRanges.get(index - 1).getEnd() < m_downLoadedRanges.get(index).getStart()) {
-                currentMissingRange = new Range(m_downLoadedRanges.get(index - 1).getEnd(),
-                        m_downLoadedRanges.get(index).getStart());
+            m_missingRanges = ranges;
+        }else if(!m_updateFlag.get()){
+            System.out.println("Computing Missing Ranges");
+            long fileSize = IdcDm.fileSize;
+            m_missingRanges = new ArrayList<>();
+            Range currentMissingRange;
+            long lastDownloadedByte;
+            int index;
+            // finding missing ranges
+            for (index = 1; index < m_downLoadedRanges.size(); index++) {
+                if (m_downLoadedRanges.get(index - 1).getEnd() < m_downLoadedRanges.get(index).getStart()) {
+                    currentMissingRange = new Range(m_downLoadedRanges.get(index - 1).getEnd(),
+                            m_downLoadedRanges.get(index).getStart());
+                    m_missingRanges.add(currentMissingRange);
+                }
+            }
+            // making sure we have all missing ranges
+            lastDownloadedByte = m_downLoadedRanges.get(index - 1).getEnd();
+            if (lastDownloadedByte != fileSize) {
+                currentMissingRange = new Range(lastDownloadedByte,
+                        fileSize);
                 m_missingRanges.add(currentMissingRange);
             }
         }
-        // making sure we have all missing ranges
-        lastDownloadedByte = m_downLoadedRanges.get(index - 1).getEnd();
-        if (lastDownloadedByte != fileSize) {
-            currentMissingRange = new Range(lastDownloadedByte,
-                    fileSize);
-            m_missingRanges.add(currentMissingRange);
-        }
+        m_updateFlag.set(false);
         return m_missingRanges;
-    }
-
-    String getUrl() {
-        return url;
     }
 }
