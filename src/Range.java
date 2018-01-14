@@ -4,6 +4,7 @@ import java.io.Serializable;
  * Describes a simple range, with a start, an end, and a length
  */
 class Range implements Serializable {
+	private static final long serialVersionUID = 1L;
     private long start;
     private long end;
 
@@ -50,7 +51,7 @@ class Range implements Serializable {
     }
 
     static class UnionResponse implements Serializable {
-
+    	private static final long serialVersionUID = 1L;
         private int m_resCode;
         private Range m_updatedRange;
 

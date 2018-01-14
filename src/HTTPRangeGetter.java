@@ -12,7 +12,6 @@ import java.util.concurrent.BlockingQueue;
  * It supports downloading a range of data, and limiting the download rate using a token bucket.
  */
 public class HTTPRangeGetter implements Runnable {
-
     private static final String MODULE_NAME = "HTTPRangeGetter";
     static final int CHUNK_SIZE = 4096;
     private static final int CONNECT_TIMEOUT = 500;
@@ -33,7 +32,7 @@ public class HTTPRangeGetter implements Runnable {
         this.tokenBucket = tokenBucket;
     }
 
-
+    // Download the given worker range
     private void downloadRange() throws IOException, InterruptedException {
         String rangRequestProperty;
         long startRange = this.range.getStart();
@@ -53,6 +52,7 @@ public class HTTPRangeGetter implements Runnable {
         httpConnection.setRequestProperty("Range", rangRequestProperty);
         Utilities.Log(MODULE_NAME, "range request - " + rangRequestProperty);
         httpConnection.connect();
+        
         // Download the data in the given range
         downloadData(httpConnection, startRange);
     }
@@ -101,6 +101,7 @@ public class HTTPRangeGetter implements Runnable {
             if (in != null) {
                 in.close();
             }
+            
             httpConnection.disconnect();
         }
     }

@@ -58,7 +58,7 @@ public class IdcDm {
 
     private static void downloadFile() throws InterruptedException{
 
-        String downloadStatus = "failed";
+        String downloadStatus = "failed operation - Look log file for more information";
         File metaDataFile;
 
         fileSize = getFileSize(url);
@@ -76,6 +76,7 @@ public class IdcDm {
                 Utilities.ErrorLog(MODULE_NAME,"Could not get file size...");
             }
         }
+        
         /* Try to download a file for max number of attempts attempts.
            In case of missing data, due to timeout connection or any other
            error in one of the concurrent connections will try to recover
@@ -97,13 +98,15 @@ public class IdcDm {
             }
         }
 
+        // Check if the download is completed
         if (downloadableMetadata.isCompleted()) {
             FileWriter.renameTmp(downloadableMetadata.getFilename());
             downloadableMetadata.delete();
             downloadStatus = "succeeded";
-        } else {
+        } else if(numberOfDownloadAttempts == MAX_DOWNLOAD_ATTEMPTS) {
             Utilities.Log(MODULE_NAME, "Exceeded number of max tries - " + numberOfDownloadAttempts);
         }
+        
         System.out.printf(END_OF_DOWNLOAD_MESSAGE, downloadStatus);
     }
 
@@ -118,55 +121,53 @@ public class IdcDm {
     private static void Download(){
 
         ArrayList<Range> ranges;
-        //1. Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
+        
+        // Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
         ranges = downloadableMetadata.getMissingRanges();
 
-        if (fileSize != -1) {
+        int chunkQueueSize = (int) fileSize;
+        TokenBucket tokenBucket;
+        RateLimiter rateLimiter;
+        FileWriter fileWriter;
+        Thread fileWriterThread;
 
-            int chunkQueueSize = (int) fileSize;
-            TokenBucket tokenBucket;
-            RateLimiter rateLimiter;
-            FileWriter fileWriter;
-            Thread fileWriterThread;
-
-            Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
-            BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
-            if (maxBytesPerSecond != null) {
-                tokenBucket = new TokenBucket(false);
-                rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
-            } else {
-                tokenBucket = new TokenBucket(true);
-                rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
-            }
-
-            fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
-            fileWriterThread = new Thread(fileWriter);
-            Utilities.Log(MODULE_NAME, "starting fileWriterThread");
-            fileWriterThread.start();
-            Thread rateLimiterThread = new Thread(rateLimiter);
-            Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
-            rateLimiterThread.start();
-
-            // Split the ranges between workers
-            ExecutorService httpRangeGetterTPExecutor =
-                    executeHttpRangeGetterThreadPool(
-                            url,
-                            numberOfWorkers,
-                            chunkQueueSize,
-                            chunkQueue,
-                            tokenBucket,
-                            ranges
-                    );
-
-            // 2. Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
-            joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
+        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
+        BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
+        if (maxBytesPerSecond != null) {
+            tokenBucket = new TokenBucket(false);
+            rateLimiter = new RateLimiter(tokenBucket, maxBytesPerSecond);
+        } else {
+            tokenBucket = new TokenBucket(true);
+            rateLimiter = new RateLimiter(tokenBucket, Long.MAX_VALUE);
         }
+
+        fileWriter = new FileWriter(downloadableMetadata, chunkQueue);
+        fileWriterThread = new Thread(fileWriter);
+        Utilities.Log(MODULE_NAME, "starting fileWriterThread");
+        fileWriterThread.start();
+        Thread rateLimiterThread = new Thread(rateLimiter);
+        Utilities.Log(MODULE_NAME, "starting rateLimiterThread");
+        rateLimiterThread.start();
+
+        // Split the ranges between workers
+        ExecutorService httpRangeGetterTPExecutor =
+                executeHttpRangeGetterThreadPool(
+                        url,
+                        numberOfWorkers,
+                        chunkQueueSize,
+                        chunkQueue,
+                        tokenBucket,
+                        ranges
+                );
+
+        // Join the HTTPRangeGetters, send finish marker to the Queue and terminate the TokenBucket
+        joinThreads(chunkQueue, fileWriterThread, tokenBucket, rateLimiterThread, httpRangeGetterTPExecutor);
+        
     }
 
     private static void getAndSetMeteDataFromFile(File metadataFile) throws IOException {
 
         // Read and set metaData serialized object
-
         try (InputStream readMetaDateFile = new FileInputStream(metadataFile);
              ObjectInput metaData = new ObjectInputStream(readMetaDateFile)){
 
@@ -174,7 +175,7 @@ public class IdcDm {
             Utilities.Log(MODULE_NAME, "Reading meta data file...");
             downloadableMetadata = (DownloadableMetadata) metaData.readObject();
         } catch (FileNotFoundException | ClassNotFoundException e) {
-            e.printStackTrace();
+        	Utilities.Log(MODULE_NAME,"There was an error while reading metadata file " + e.getMessage());
         }
     }
 
@@ -191,10 +192,12 @@ public class IdcDm {
         long rangeChunkSize;
         long startRange;
         long endRange;
+        
         Utilities.Log(MODULE_NAME, "rangeChunkSize is: " + chunkQueueSize);
 
         // loop over missing ranges and split work between workers
         for (Range mainRange : ranges) {
+        	
             // calculate the max number of workers needed for this range
             maxNumberOfWorkers = rangeMaximalNumberOfConnections(mainRange);
             relevantNumberOfWorkers = Math.min(numberOfWorkers, maxNumberOfWorkers);
@@ -213,6 +216,7 @@ public class IdcDm {
                 HTTPRangeGetter httpRangeGetter = new HTTPRangeGetter(url, range, chunkQueue, tokenBucket);
                 httpRangeGetterTPExecutor.execute(httpRangeGetter);
                 startRange = endRange + 1;
+                
                 // final process range should end at the end of the main range
                 if (i == relevantNumberOfWorkers - 2) {
                     endRange = mainRange.getEnd();
@@ -221,10 +225,12 @@ public class IdcDm {
                 {
                     endRange += rangeChunkSize;
                 }
+                
                 Utilities.Log(MODULE_NAME, "Executing a HTTPRangeGetter thread with ranges:");
             }
 
         }
+        
         return httpRangeGetterTPExecutor;
     }
 
@@ -245,27 +251,29 @@ public class IdcDm {
             chunkQueue.put(new Chunk(new byte[0], -1, 0));
             tokenBucket.terminate();
 
-            // 3. Join the FileWriter and RateLimiter
+            // Join the FileWriter and RateLimiter
             fileWriterThread.join();
             rateLimiterThread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+        	Utilities.Log(MODULE_NAME,"Interrupted Exception joining threads " + e.getMessage());
         }
     }
 
     private static int getFileSize(String urlString) {
         URL url;
         HttpURLConnection httpConnection = null;
+        
         try{
             url = new URL(urlString);
             httpConnection = (HttpURLConnection) url.openConnection();
             httpConnection.setRequestMethod("HEAD");
             return httpConnection.getContentLength();
         } catch (IOException e) {
-            e.printStackTrace();
+        	Utilities.Log(MODULE_NAME,"There was an IO exception while getting the file size " + e.getMessage());
         } finally {
             httpConnection.disconnect();
         }
+        
         return -1;
     }
 

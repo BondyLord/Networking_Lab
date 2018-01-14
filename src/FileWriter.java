@@ -50,13 +50,12 @@ public class FileWriter implements Runnable {
                 writeDataToFile(randomAccessFile, chunk, chunkSize);
                 progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
                 addDownloadedRange(chunk, chunkSize);
-                //Utilities.Log(MODULE_NAME, "Range: " +range.getStart() + ":" + range.getEnd() + " was added");
                 updateMetadata(metadataFilename);
             }
             Thread.sleep(500);
             randomAccessFile.close();
         } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
+            Utilities.Log(MODULE_NAME, "There was an exception while writing chunk data " + e.getMessage());
         }
     }
 
@@ -70,6 +69,7 @@ public class FileWriter implements Runnable {
             metadataObjectOut.writeObject(downloadableMetadata);
             metadataObjectOut.close();
             metadataFileOut.close();
+            
             // to handle corrupted temp file - renaming metadata.tmp file to metadata after writing
             renameTmp(metadataFilename);
     		
@@ -77,10 +77,8 @@ public class FileWriter implements Runnable {
 			if(metadataObjectOut != null)
 				metadataObjectOut.close();
 			if(metadataFileOut != null)
-				metadataFileOut.close();
-				
+				metadataFileOut.close();	
 		}
-
     }
 
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
@@ -109,6 +107,7 @@ public class FileWriter implements Runnable {
         }
     }
 
+    // Update and write the download progress percentage
     private double getUpdatedProgress(double progressPercentage, long chunkSize, long fileSize) {
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
@@ -124,7 +123,7 @@ public class FileWriter implements Runnable {
         try {
             this.writeChunks();
         } catch (IOException e) {
-            e.printStackTrace();
+        	Utilities.Log(MODULE_NAME, "FileWriter error " + e.getMessage());
         }
     }
 }

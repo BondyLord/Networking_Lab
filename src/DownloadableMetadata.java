@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * HINT: avoid the obvious bitmap solution, and think about ranges...
  */
 class DownloadableMetadata implements Serializable {
-
+	private static final long serialVersionUID = 1L;
     private final String metadataFilename;
     private static final String MODULE_NAME="DownloadableMetadata";
     private String filename;
@@ -114,7 +114,7 @@ class DownloadableMetadata implements Serializable {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+        	Utilities.Log(MODULE_NAME,"There was an erro while deleting metadata file " + e.getMessage());
         }
     }
 
@@ -128,12 +128,13 @@ class DownloadableMetadata implements Serializable {
             ranges.add(new Range(0L, IdcDm.fileSize));
             m_missingRanges = ranges;
         }else if(!m_updateFlag.get()){
-            System.out.println("Computing Missing Ranges");
+        	Utilities.Log(MODULE_NAME,"Computing Missing Ranges");
             long fileSize = IdcDm.fileSize;
             m_missingRanges = new ArrayList<>();
             Range currentMissingRange;
             long lastDownloadedByte;
             int index;
+            
             // finding missing ranges
             for (index = 1; index < m_downLoadedRanges.size(); index++) {
                 if (m_downLoadedRanges.get(index - 1).getEnd() < m_downLoadedRanges.get(index).getStart()) {
@@ -142,6 +143,7 @@ class DownloadableMetadata implements Serializable {
                     m_missingRanges.add(currentMissingRange);
                 }
             }
+            
             // making sure we have all missing ranges
             lastDownloadedByte = m_downLoadedRanges.get(index - 1).getEnd();
             if (lastDownloadedByte != fileSize) {
@@ -150,6 +152,7 @@ class DownloadableMetadata implements Serializable {
                 m_missingRanges.add(currentMissingRange);
             }
         }
+        
         m_updateFlag.set(false);
         return m_missingRanges;
     }
