@@ -26,20 +26,25 @@ public class FileWriter implements Runnable {
         // create tempFile
         String tempFileName = downloadableMetadata.getFilename() + ".tmp";
         File tempFile = new File(tempFileName);
+        
         if (!tempFile.createNewFile()) {
             Utilities.Log(MODULE_NAME, "Temp file exists... ");
         }
+        
         RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile.getPath(), "rw");
         Utilities.Log(MODULE_NAME, "open RandomAccessFile for Writing to file: " + tempFileName);
 
         String metadataFilename = downloadableMetadata.getMetadataFilename();
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
+        
         // using downloadableMetadata object to get current downloaded percentage
         long fileSize = IdcDm.fileSize;
         double progressPercentage = (int) (((double) downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
         try {
+        	// Write all available data till the end(represented by offset -1)
             while (true) {
                 Chunk chunk = chunkQueue.take();
+                
                 // stopping while at end of data
                 if (chunk.getOffset() == -1) {
                     Utilities.Log(MODULE_NAME, "Exiting FileWriter thread, " +
@@ -48,11 +53,12 @@ public class FileWriter implements Runnable {
                 }
 
                 long chunkSize = chunk.getSize_in_bytes();
-                writeDataToFile(randomAccessFile, chunk, chunkSize);
-                progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize);
-                addDownloadedRange(chunk, chunkSize);
-                updateMetadata(metadataFilename);
+                writeDataToFile(randomAccessFile, chunk, chunkSize); // Write data to file
+                progressPercentage = getUpdatedProgress(progressPercentage, chunkSize, fileSize); // Show progress
+                addDownloadedRange(chunk, chunkSize); // Add downloaded range in metadata object
+                updateMetadata(metadataFilename); // Update downloaded range in metadata file
             }
+            
             Thread.sleep(500);
             randomAccessFile.close();
         } catch (InterruptedException | IOException e) {
@@ -60,6 +66,7 @@ public class FileWriter implements Runnable {
         }
     }
 
+    // Update downloaded range in the metadata file
     private void updateMetadata(String metadataFilename) throws IOException {
         FileOutputStream metadataFileOut = null;
         ObjectOutput metadataObjectOut = null;
@@ -83,23 +90,29 @@ public class FileWriter implements Runnable {
         }
     }
 
+    // Add downloaded range in metadata object
     private void addDownloadedRange(Chunk chunk, long chunkSize) {
         Range range = new Range(chunk.getOffset(), chunk.getOffset() + chunkSize);
         downloadableMetadata.addRange(range);
     }
 
+    // Write the given data into the output downloaded file
     private void writeDataToFile(RandomAccessFile randomAccessFile, Chunk chunk, long chunkSize) throws IOException {
         long chunkOffset = chunk.getOffset();
         long chunkEndSet = chunkOffset + chunkSize;
         byte[] byteArray = chunk.getData();
-        randomAccessFile.seek(chunkOffset);
+        
+        randomAccessFile.seek(chunkOffset); // Seek the right data offset
         Utilities.Log(MODULE_NAME, "Writing chunk to file - chunk range - "
                 + chunkOffset + " - " + chunkEndSet);
+        
+        // Write the given chunk data
         for (int i = 0; i < chunkSize; i++) {
             randomAccessFile.write(byteArray[i]);
         }
     }
 
+    // File rename operation
     static void renameTmp(String fileName) {
         File tmpFile = new File(fileName + ".tmp");
         if (tmpFile.exists()) {
@@ -112,14 +125,17 @@ public class FileWriter implements Runnable {
         }
     }
 
+    // Update and write the download progress percentage
     private double getUpdatedProgress(double progressPercentage, long chunkSize, long fileSize) {
-        // Update and write the download progress percentage
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
         int progressPercentageAfter = (int) progressPercentage;
+        
+        // Check for a percentage change and update the user accordingly
         if ((Math.floor(progressPercentageBefore) != progressPercentageAfter) || progressPercentageBefore == 0.0) {
             System.out.println("Downloaded " + progressPercentageAfter + "%");
         }
+        
         return progressPercentage;
     }
 
