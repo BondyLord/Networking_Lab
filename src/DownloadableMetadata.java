@@ -127,7 +127,7 @@ class DownloadableMetadata implements Serializable {
 
         ArrayList<Range> ranges;
         long fileSize = IdcDm.fileSize;
-        long indexOfLastByteInTheFile = fileSize - 1;
+        long indexOfLastByteInTheFile = fileSize;
         // if no metadata exist we initiate the one first range as the full file size
         if (m_downLoadedRanges.size() == 0) {
             ranges = new ArrayList<>();
