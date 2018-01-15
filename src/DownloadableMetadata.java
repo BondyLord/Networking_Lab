@@ -147,8 +147,8 @@ class DownloadableMetadata implements Serializable {
                 // take into count that the range array list is sorted
                 if (m_downLoadedRanges.get(index).getStart() - m_downLoadedRanges.get(index - 1).getEnd() > 1) {
                     currentMissingRange = new Range(
-                            m_downLoadedRanges.get(index - 1).getEnd() + 1,
-                            m_downLoadedRanges.get(index).getStart() - 1);
+                            m_downLoadedRanges.get(index - 1).getEnd(),
+                            m_downLoadedRanges.get(index).getStart());
                     m_missingRanges.add(currentMissingRange);
                 }
             }
@@ -157,7 +157,7 @@ class DownloadableMetadata implements Serializable {
             lastDownloadedByte = m_downLoadedRanges.get(index - 1).getEnd();
             if (lastDownloadedByte != indexOfLastByteInTheFile) {
                 currentMissingRange = new Range(
-                        lastDownloadedByte + 1,
+                        lastDownloadedByte,
                         indexOfLastByteInTheFile);
                 m_missingRanges.add(currentMissingRange);
             }

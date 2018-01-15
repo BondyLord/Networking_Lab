@@ -18,7 +18,7 @@ public class IdcDm {
     private static String url;
     private static int numberOfDownloadAttempts;
     private static DownloadableMetadata downloadableMetadata;
-
+    private static int CHUNCK_QUEUE_SIZE = 4096;
     private static final String END_OF_DOWNLOAD_MESSAGE = "Download %s \n";
     private static final String METADATA_FILE_WAS_FOUND_MESSAGE = "Metadata file was found. Resume downloading... \n";
     private static final String RETRIEVE_DATA_MESSAGE = "Retrieving failed data - attempt number: %d \n";
@@ -126,14 +126,13 @@ public class IdcDm {
         ranges = downloadableMetadata.getMissingRanges();
 
         // Setup the Queue, TokenBucket, DownloadableMetadata, FileWriter, RateLimiter, and a pool of HTTPRangeGetters
-        int chunkQueueSize = (int) fileSize;
         TokenBucket tokenBucket;
         RateLimiter rateLimiter;
         FileWriter fileWriter;
         Thread fileWriterThread;
 
-        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + chunkQueueSize);
-        BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(chunkQueueSize);
+        Utilities.Log(MODULE_NAME, "chunkQueueSize is: " + CHUNCK_QUEUE_SIZE);
+        BlockingQueue<Chunk> chunkQueue = new ArrayBlockingQueue<>(CHUNCK_QUEUE_SIZE);
 
         if (maxBytesPerSecond != null) {
             tokenBucket = new TokenBucket(false);
@@ -155,7 +154,7 @@ public class IdcDm {
                 executeHttpRangeGetterThreadPool(
                         url,
                         numberOfWorkers,
-                        chunkQueueSize,
+                        CHUNCK_QUEUE_SIZE,
                         chunkQueue,
                         tokenBucket,
                         ranges

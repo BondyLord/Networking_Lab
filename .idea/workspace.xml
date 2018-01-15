@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d9b9b981-7d4e-49f0-a574-20bbd15fa87c" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/DownloadableMetadata.java" afterPath="$PROJECT_DIR$/src/DownloadableMetadata.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/FileWriter.java" afterPath="$PROJECT_DIR$/src/FileWriter.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/HTTPRangeGetter.java" afterPath="$PROJECT_DIR$/src/HTTPRangeGetter.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Range.java" afterPath="$PROJECT_DIR$/src/Range.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utill/Utilities.java" afterPath="$PROJECT_DIR$/src/Utill/Utilities.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/IdcDm.java" afterPath="$PROJECT_DIR$/src/IdcDm.java" />
     </list>
     <ignored path="Networking_Labs.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,13 +27,13 @@
       <file leaf-file-name="IdcDm.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/IdcDm.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="414">
-              <caret line="29" column="41" lean-forward="true" selection-start-line="29" selection-start-column="41" selection-end-line="29" selection-end-column="41" />
+            <state relative-caret-position="266">
+              <caret line="133" column="76" lean-forward="false" selection-start-line="133" selection-start-column="76" selection-end-line="133" selection-end-column="76" />
               <folding>
                 <element signature="method#joinThreads#0;class#IdcDm#0" expanded="false" />
                 <element signature="method#getFileSize#0;class#IdcDm#0" expanded="false" />
                 <element signature="method#rangeMaximalNumberOfConnections#0;class#IdcDm#0" expanded="false" />
-                <marker date="1516046149320" expanded="true" signature="11400:11451" ph="{...}" />
+                <marker date="1516047625156" expanded="true" signature="11412:11463" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -61,11 +57,24 @@
       <file leaf-file-name="DownloadableMetadata.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/DownloadableMetadata.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="5" column="49" lean-forward="false" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
+            <state relative-caret-position="178">
+              <caret line="150" column="70" lean-forward="true" selection-start-line="150" selection-start-column="70" selection-end-line="150" selection-end-column="70" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <marker date="1516046130100" expanded="true" signature="5880:5951" ph="{...}" />
+                <marker date="1516048669376" expanded="true" signature="5868:5939" ph="{...}" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HTTPRangeGetter.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/HTTPRangeGetter.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1548">
+              <caret line="92" column="17" lean-forward="true" selection-start-line="92" selection-start-column="17" selection-end-line="92" selection-end-column="17" />
+              <folding>
+                <marker date="1516046237764" expanded="true" signature="3724:3781" ph="{...}" />
+                <marker date="1516046237764" expanded="true" signature="3986:4002" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -82,7 +91,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>bucketIsTerminated</find>
       <find>RATE_IN_Millisecond</find>
       <find>bytes=</find>
       <find>859096</find>
@@ -111,6 +119,7 @@
       <find>system</find>
       <find>syste</find>
       <find>sys</find>
+      <find>qu</find>
       <find>getMissingRanges</find>
     </findStrings>
     <replaceStrings>
@@ -140,8 +149,8 @@
         <option value="$PROJECT_DIR$/src/Range.java" />
         <option value="$PROJECT_DIR$/src/FileWriter.java" />
         <option value="$PROJECT_DIR$/src/HTTPRangeGetter.java" />
-        <option value="$PROJECT_DIR$/src/DownloadableMetadata.java" />
         <option value="$PROJECT_DIR$/src/IdcDm.java" />
+        <option value="$PROJECT_DIR$/src/DownloadableMetadata.java" />
       </list>
     </option>
   </component>
@@ -219,7 +228,7 @@
     </option>
   </component>
   <component name="RunManager" selected="Application.Mario1">
-    <configuration name="IdcDm" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+    <configuration name="IdcDm" type="Application" factoryName="Application" nameIsGenerated="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="IdcDm" />
       <option name="VM_PARAMETERS" value="" />
@@ -237,7 +246,7 @@
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="IdcDm" />
       <option name="VM_PARAMETERS" value="" />
-      <option name="PROGRAM_PARAMETERS" value="http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4 10" />
+      <option name="PROGRAM_PARAMETERS" value="http://archive.org/download/Mario1_500/Mario1_500.avi 5" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -668,11 +677,6 @@
       <item index="1" class="java.lang.String" itemvalue="Application.Mario1" />
       <item index="2" class="java.lang.String" itemvalue="Application.IdcDm" />
     </list>
-    <recent_temporary>
-      <list size="1">
-        <item index="0" class="java.lang.String" itemvalue="Application.IdcDm" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -693,7 +697,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="75" y="6" width="1857" height="1092" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32830626" sideWeight="0.49675676" order="6" side_tool="false" content_ui="tabs" />
@@ -703,7 +706,7 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.44785276" sideWeight="0.5040431" order="13" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21244635" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.400818" sideWeight="0.76873314" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.400818" sideWeight="0.76873314" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41717792" sideWeight="0.47961372" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.51431495" sideWeight="0.48658797" order="11" side_tool="false" content_ui="tabs" x="35" y="382" width="1850" height="275" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -774,13 +777,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/FileWriter.java</url>
-          <line>41</line>
+          <line>43</line>
           <properties />
           <option name="timeStamp" value="20" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/FileWriter.java</url>
-          <line>107</line>
+          <line>114</line>
           <properties />
           <option name="timeStamp" value="28" />
         </line-breakpoint>
@@ -869,7 +872,7 @@
         <state relative-caret-position="368">
           <caret line="41" column="13" lean-forward="true" selection-start-line="41" selection-start-column="13" selection-end-line="41" selection-end-column="13" />
           <folding>
-            <marker date="1516032460441" expanded="false" signature="2486:2861" ph="{...}" />
+            <marker date="1516046237764" expanded="false" signature="2486:2861" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -879,8 +882,8 @@
         <state relative-caret-position="900">
           <caret line="53" column="45" lean-forward="false" selection-start-line="53" selection-start-column="45" selection-end-line="53" selection-end-column="45" />
           <folding>
-            <marker date="1516046050531" expanded="true" signature="115:217" ph="/**...*/" />
-            <marker date="1516046050531" expanded="true" signature="5532:5550" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="115:217" ph="/**...*/" />
+            <marker date="1516046237764" expanded="true" signature="6152:6170" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -898,7 +901,7 @@
           <caret line="105" column="42" lean-forward="false" selection-start-line="105" selection-start-column="42" selection-end-line="105" selection-end-column="42" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1516046130100" expanded="true" signature="5880:5951" ph="{...}" />
+            <marker date="1516048669376" expanded="true" signature="5868:5939" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -921,8 +924,8 @@
         <state relative-caret-position="353">
           <caret line="112" column="13" lean-forward="false" selection-start-line="112" selection-start-column="13" selection-end-line="112" selection-end-column="13" />
           <folding>
-            <marker date="1516046083227" expanded="true" signature="3724:3781" ph="{...}" />
-            <marker date="1516046083227" expanded="true" signature="3986:4002" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3724:3781" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3986:4002" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -935,7 +938,7 @@
             <element signature="method#joinThreads#0;class#IdcDm#0" expanded="false" />
             <element signature="method#getFileSize#0;class#IdcDm#0" expanded="false" />
             <element signature="method#rangeMaximalNumberOfConnections#0;class#IdcDm#0" expanded="false" />
-            <marker date="1516046149320" expanded="true" signature="11400:11451" ph="{...}" />
+            <marker date="1516047625156" expanded="true" signature="11412:11463" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -948,7 +951,7 @@
             <element signature="method#joinThreads#0;class#IdcDm#0" expanded="false" />
             <element signature="method#getFileSize#0;class#IdcDm#0" expanded="false" />
             <element signature="method#rangeMaximalNumberOfConnections#0;class#IdcDm#0" expanded="false" />
-            <marker date="1516046149320" expanded="true" signature="11400:11451" ph="{...}" />
+            <marker date="1516047625156" expanded="true" signature="11412:11463" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -971,8 +974,8 @@
         <state relative-caret-position="720">
           <caret line="46" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
           <folding>
-            <marker date="1516046083227" expanded="true" signature="3724:3781" ph="{...}" />
-            <marker date="1516046083227" expanded="true" signature="3986:4002" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3724:3781" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3986:4002" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -992,8 +995,8 @@
         <state relative-caret-position="360">
           <caret line="23" column="51" lean-forward="true" selection-start-line="23" selection-start-column="51" selection-end-line="23" selection-end-column="51" />
           <folding>
-            <marker date="1516046050531" expanded="true" signature="115:217" ph="/**...*/" />
-            <marker date="1516046050531" expanded="true" signature="5532:5550" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="115:217" ph="/**...*/" />
+            <marker date="1516046237764" expanded="true" signature="6152:6170" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1020,7 +1023,7 @@
         <state relative-caret-position="54">
           <caret line="3" column="6" lean-forward="false" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="6" />
           <folding>
-            <marker date="1516032460441" expanded="false" signature="2486:2861" ph="{...}" />
+            <marker date="1516046237764" expanded="false" signature="2486:2861" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1031,7 +1034,7 @@
           <caret line="73" column="20" lean-forward="false" selection-start-line="73" selection-start-column="20" selection-end-line="73" selection-end-column="20" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1516046130100" expanded="true" signature="5880:5951" ph="{...}" />
+            <marker date="1516048669376" expanded="true" signature="5868:5939" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1044,7 +1047,7 @@
             <element signature="method#joinThreads#0;class#IdcDm#0" expanded="false" />
             <element signature="method#getFileSize#0;class#IdcDm#0" expanded="false" />
             <element signature="method#rangeMaximalNumberOfConnections#0;class#IdcDm#0" expanded="false" />
-            <marker date="1516046149320" expanded="true" signature="11400:11451" ph="{...}" />
+            <marker date="1516047625156" expanded="true" signature="11412:11463" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1067,8 +1070,8 @@
         <state relative-caret-position="1386">
           <caret line="84" column="38" lean-forward="false" selection-start-line="84" selection-start-column="38" selection-end-line="84" selection-end-column="38" />
           <folding>
-            <marker date="1516046083227" expanded="true" signature="3724:3781" ph="{...}" />
-            <marker date="1516046083227" expanded="true" signature="3986:4002" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3724:3781" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3986:4002" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1105,7 +1108,7 @@
         <state relative-caret-position="54">
           <caret line="3" column="6" lean-forward="false" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="6" />
           <folding>
-            <marker date="1516032460441" expanded="false" signature="2486:2861" ph="{...}" />
+            <marker date="1516046237764" expanded="false" signature="2486:2861" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1116,7 +1119,7 @@
           <caret line="33" column="8" lean-forward="true" selection-start-line="33" selection-start-column="8" selection-end-line="33" selection-end-column="8" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1516046130100" expanded="true" signature="5880:5951" ph="{...}" />
+            <marker date="1516048669376" expanded="true" signature="5868:5939" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1163,7 +1166,7 @@
         <state relative-caret-position="710">
           <caret line="72" column="27" lean-forward="false" selection-start-line="72" selection-start-column="27" selection-end-line="72" selection-end-column="27" />
           <folding>
-            <marker date="1516032460441" expanded="false" signature="2486:2861" ph="{...}" />
+            <marker date="1516046237764" expanded="false" signature="2486:2861" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1186,50 +1189,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/HTTPRangeGetter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="336">
-          <caret line="91" column="24" lean-forward="false" selection-start-line="91" selection-start-column="24" selection-end-line="91" selection-end-column="24" />
-          <folding>
-            <marker date="1516046083227" expanded="true" signature="3724:3781" ph="{...}" />
-            <marker date="1516046083227" expanded="true" signature="3986:4002" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/FileWriter.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="534">
           <caret line="121" column="15" lean-forward="false" selection-start-line="121" selection-start-column="12" selection-end-line="121" selection-end-column="15" />
           <folding>
-            <marker date="1516046050531" expanded="true" signature="115:217" ph="/**...*/" />
-            <marker date="1516046050531" expanded="true" signature="5532:5550" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/IdcDm.log">
-      <provider selected="true" editor-type-id="LogFileEditorProvider">
-        <state relative-caret-position="-108">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="-104737">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/IdcDm.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="414">
-          <caret line="29" column="41" lean-forward="true" selection-start-line="29" selection-start-column="41" selection-end-line="29" selection-end-column="41" />
-          <folding>
-            <element signature="method#joinThreads#0;class#IdcDm#0" expanded="false" />
-            <element signature="method#getFileSize#0;class#IdcDm#0" expanded="false" />
-            <element signature="method#rangeMaximalNumberOfConnections#0;class#IdcDm#0" expanded="false" />
-            <marker date="1516046149320" expanded="true" signature="11400:11451" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="115:217" ph="/**...*/" />
+            <marker date="1516046237764" expanded="true" signature="6152:6170" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1247,13 +1213,50 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/IdcDm.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="133" column="76" lean-forward="false" selection-start-line="133" selection-start-column="76" selection-end-line="133" selection-end-column="76" />
+          <folding>
+            <element signature="method#joinThreads#0;class#IdcDm#0" expanded="false" />
+            <element signature="method#getFileSize#0;class#IdcDm#0" expanded="false" />
+            <element signature="method#rangeMaximalNumberOfConnections#0;class#IdcDm#0" expanded="false" />
+            <marker date="1516047625156" expanded="true" signature="11412:11463" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/HTTPRangeGetter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1548">
+          <caret line="92" column="17" lean-forward="true" selection-start-line="92" selection-start-column="17" selection-end-line="92" selection-end-column="17" />
+          <folding>
+            <marker date="1516046237764" expanded="true" signature="3724:3781" ph="{...}" />
+            <marker date="1516046237764" expanded="true" signature="3986:4002" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/IdcDm.log">
+      <provider selected="true" editor-type-id="LogFileEditorProvider">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="-104737">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/DownloadableMetadata.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="5" column="49" lean-forward="false" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
+        <state relative-caret-position="178">
+          <caret line="150" column="70" lean-forward="true" selection-start-line="150" selection-start-column="70" selection-end-line="150" selection-end-column="70" />
           <folding>
             <element signature="imports" expanded="true" />
-            <marker date="1516046130100" expanded="true" signature="5880:5951" ph="{...}" />
+            <marker date="1516048669376" expanded="true" signature="5868:5939" ph="{...}" />
           </folding>
         </state>
       </provider>
