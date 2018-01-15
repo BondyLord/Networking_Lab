@@ -27,7 +27,7 @@ public class Utilities {
         try {
             logFileOutPutStream.write(logMessage);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 
@@ -48,7 +48,7 @@ public class Utilities {
         try {
             logFileWriter.write(logMessage);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 
@@ -58,7 +58,7 @@ public class Utilities {
             logFileOutPutStream.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 

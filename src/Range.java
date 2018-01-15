@@ -25,21 +25,44 @@ class Range implements Serializable {
         UnionResponse unionResponse;
         Range unitedRange = null;
         int resCode = 0;
-        Long rangeDifferences = i_rangeOne.getStart() - i_rangeTwo.getStart();
+        long rangeOneOffset = i_rangeOne.getStart();
+        long rangeOneEndIndex = i_rangeOne.getEnd();
+        long rangeTwoOffset = i_rangeTwo.getStart();
+        long rangeTwoEndIndex = i_rangeTwo.getEnd();
+
+        // Get the distance between start point of the two ranges
+        long rangeOffsetDifferences = rangeOneOffset - rangeTwoOffset;
+        long rangeEndDifferences =  rangeOneEndIndex - rangeTwoEndIndex;
         // uniting ranges
-        if (rangeDifferences < 0) {
-            if (i_rangeOne.getEnd() >= i_rangeTwo.getStart()) {
-                unitedRange = new Range(i_rangeOne.getStart(), i_rangeTwo.getEnd());
-            } else {
+
+        if (rangeOffsetDifferences < 0) {
+            if( rangeTwoOffset  - rangeOneEndIndex > 1){
                 // range two is bigger than range one
-                resCode = -1;
+                resCode = 1;
+            }
+            else if ( rangeEndDifferences >= 0 ) {
+                // range two is inside range one
+                unitedRange = i_rangeOne;
+            } else{
+                // range one and two overlap
+                // |------ range one ----|
+                //        |------- range two ------|
+                unitedRange = new Range(rangeOneOffset, rangeTwoEndIndex);
             }
         } else {
-            if (i_rangeOne.getStart() <= i_rangeTwo.getEnd()) {
-                unitedRange = new Range(i_rangeTwo.getStart(), i_rangeOne.getEnd());
-            } else {
-                // range one is bigger than range two
-                resCode = 1;
+            if (rangeOneOffset - rangeTwoEndIndex > 1) {
+                //range one is bigger than range two
+                resCode = -1;
+            }
+            else if (rangeEndDifferences <= 0 ){
+                // range one is inside range two
+                unitedRange = i_rangeTwo;
+            }else{
+                // range two and one overlap
+                // |------ range two ----|
+                //        |------- range one ------|
+                unitedRange = new Range(rangeTwoOffset, rangeOneEndIndex);
+
             }
         }
         unionResponse = new UnionResponse(unitedRange, resCode);
@@ -47,7 +70,7 @@ class Range implements Serializable {
     }
 
     long getLength() {
-        return end - start;
+        return (end - start);
     }
 
     static class UnionResponse implements Serializable {

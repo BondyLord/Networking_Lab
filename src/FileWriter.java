@@ -17,6 +17,7 @@ public class FileWriter implements Runnable {
     private final BlockingQueue<Chunk> chunkQueue;
     private DownloadableMetadata downloadableMetadata;
 
+
     FileWriter(DownloadableMetadata downloadableMetadata, BlockingQueue<Chunk> chunkQueue) {
         this.chunkQueue = chunkQueue;
         this.downloadableMetadata = downloadableMetadata;

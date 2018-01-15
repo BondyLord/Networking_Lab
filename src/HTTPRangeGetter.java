@@ -69,7 +69,6 @@ public class HTTPRangeGetter implements Runnable {
         InputStream in = null;
 
         try {
-
             // Check tokens availability before opening a network connection
             tokenBucket.take(CHUNK_SIZE);
 
