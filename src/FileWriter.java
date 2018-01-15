@@ -89,8 +89,12 @@ public class FileWriter implements Runnable {
     }
 
     private void writeDataToFile(RandomAccessFile randomAccessFile, Chunk chunk, long chunkSize) throws IOException {
+        long chunkOffset = chunk.getOffset();
+        long chunkEndSet = chunkOffset + chunkSize;
         byte[] byteArray = chunk.getData();
-        randomAccessFile.seek(chunk.getOffset());
+        randomAccessFile.seek(chunkOffset);
+        Utilities.Log(MODULE_NAME, "Writing chunk to file - chunk range - "
+                + chunkOffset + " - " + chunkEndSet);
         for (int i = 0; i < chunkSize; i++) {
             randomAccessFile.write(byteArray[i]);
         }
@@ -102,7 +106,6 @@ public class FileWriter implements Runnable {
             File file = new File(fileName);
             try {
                 Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                Utilities.Log(MODULE_NAME, "File: " + tmpFile + " renamed to: " + file.getName());
             } catch (IOException ex) {
                 Utilities.Log(MODULE_NAME, "Sorry! the file: " + tmpFile + " can't be renamed");
             }
