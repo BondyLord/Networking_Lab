@@ -141,6 +141,12 @@ class DownloadableMetadata implements Serializable {
             long lastDownloadedByte;
             int index;
             
+            if(m_downLoadedRanges.size() == 1 && m_downLoadedRanges.get(0).getStart() > 0)
+            {
+            	currentMissingRange = new Range(0L,m_downLoadedRanges.get(0).getStart());
+            	m_missingRanges.add(currentMissingRange);
+            }
+            
             // find missing ranges
             for (index = 1; index < m_downLoadedRanges.size(); index++) {
                 // holding both the range in the current index and the one before it
