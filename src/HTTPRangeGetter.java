@@ -97,7 +97,7 @@ public class HTTPRangeGetter implements Runnable {
             }
 
         } catch (Exception e) {
-            System.err.println("There was an exception during reading data from stream - " + e.getMessage());
+            System.err.println("There was an exception during reading data from stream: " + e.getMessage());
             throw (e);
         } finally {
             if (in != null) {
@@ -113,7 +113,7 @@ public class HTTPRangeGetter implements Runnable {
         try {
             this.downloadRange();
         } catch (IOException | InterruptedException e) {
-            System.err.println(e.getMessage());
+            System.err.println("There was an exception while getting data from the network: " + e.getMessage());
         }
     }
 }
