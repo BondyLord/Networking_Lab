@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * HINT: avoid the obvious bitmap solution, and think about ranges...
  */
 class DownloadableMetadata implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     private final String metadataFilename;
     private static final String MODULE_NAME="DownloadableMetadata";
     private String filename;
@@ -103,7 +103,7 @@ class DownloadableMetadata implements Serializable {
         long total = 0;
         for (Range range:
                 m_downLoadedRanges
-             ) {
+                ) {
             total += range.getLength();
         }
         return total == IdcDm.fileSize;
@@ -119,7 +119,7 @@ class DownloadableMetadata implements Serializable {
             }
 
         } catch (Exception e) {
-        	Utilities.Log(MODULE_NAME,"There was an error while deleting metadata file " + e.getMessage());
+            System.err.println("There was an error while deleting metadata file " + e.getMessage());
         }
     }
 
@@ -140,13 +140,13 @@ class DownloadableMetadata implements Serializable {
             Range currentMissingRange;
             long lastDownloadedByte;
             int index;
-            
+
             if(m_downLoadedRanges.size() == 1 && m_downLoadedRanges.get(0).getStart() > 0)
             {
-            	currentMissingRange = new Range(0L,m_downLoadedRanges.get(0).getStart());
-            	m_missingRanges.add(currentMissingRange);
+                currentMissingRange = new Range(0L,m_downLoadedRanges.get(0).getStart());
+                m_missingRanges.add(currentMissingRange);
             }
-            
+
             // find missing ranges
             for (index = 1; index < m_downLoadedRanges.size(); index++) {
                 // holding both the range in the current index and the one before it

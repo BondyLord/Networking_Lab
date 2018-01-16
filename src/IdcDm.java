@@ -68,13 +68,13 @@ public class IdcDm {
         if (metaDataFile.exists()) {
             try {
                 getAndSetMeteDataFromFile(metaDataFile);
-                System.out.printf(METADATA_FILE_WAS_FOUND_MESSAGE);
+                Utilities.ErrorLog(MODULE_NAME,METADATA_FILE_WAS_FOUND_MESSAGE);
             } catch (IOException e) {
-                Utilities.ErrorLog(MODULE_NAME, "Could not read metadata file!");
+                System.err.println( "Could not read metadata file!");
             }
         } else {
             if (fileSize == -1) {
-                Utilities.ErrorLog(MODULE_NAME, "Could not get file size...");
+                System.err.println( "Could not get file size...");
             }
         }
 
@@ -89,12 +89,12 @@ public class IdcDm {
 
             numberOfDownloadAttempts++;
             if (numberOfDownloadAttempts > 1) {
-                System.out.printf(RETRIEVE_DATA_MESSAGE, numberOfDownloadAttempts);
+                System.err.printf(RETRIEVE_DATA_MESSAGE, numberOfDownloadAttempts);
             }
             try {
                 Download();
             } catch (Exception e) {
-                Utilities.Log(MODULE_NAME, "There was an exception during attempt number " + numberOfDownloadAttempts);
+                System.err.println( "There was an exception during attempt number " + numberOfDownloadAttempts);
                 Thread.sleep(TIME_BETWEEN_ATTEMPTS);
             }
         }
@@ -105,10 +105,10 @@ public class IdcDm {
             downloadableMetadata.delete();
             downloadStatus = "succeeded";
         } else if (numberOfDownloadAttempts == MAX_DOWNLOAD_ATTEMPTS) {
-            Utilities.Log(MODULE_NAME, "Exceeded number of max tries - " + numberOfDownloadAttempts);
+            System.err.println( "Exceeded number of max tries - " + numberOfDownloadAttempts);
         }
 
-        System.out.printf(END_OF_DOWNLOAD_MESSAGE, downloadStatus);
+        System.err.printf(END_OF_DOWNLOAD_MESSAGE, downloadStatus);
     }
 
     /**
@@ -253,7 +253,7 @@ public class IdcDm {
             fileWriterThread.join();
             rateLimiterThread.join();
         } catch (InterruptedException e) {
-            Utilities.Log(MODULE_NAME, "Interrupted Exception joining threads " + e.getMessage());
+            System.err.println( "Interrupted Exception joining threads " + e.getMessage());
         }
     }
 
@@ -267,7 +267,7 @@ public class IdcDm {
             httpConnection.setRequestMethod("HEAD");
             return httpConnection.getContentLength();
         } catch (IOException e) {
-            Utilities.Log(MODULE_NAME, "There was an IO exception while getting the file size " + e.getMessage());
+            System.err.println( "There was an IO exception while getting the file size " + e.getMessage());
         } finally {
             httpConnection.disconnect();
         }

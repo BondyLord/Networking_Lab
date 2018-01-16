@@ -1,4 +1,3 @@
-import Utill.Utilities;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,7 +32,7 @@ class TokenBucket {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    Utilities.Log(MODULE_NAME, "Interrupted Exception while sleep");
+                    System.err.println( "Interrupted Exception while sleep");
                 }
             }
         }

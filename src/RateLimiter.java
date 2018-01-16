@@ -1,5 +1,3 @@
-import Utill.Utilities;
-
 /**
  * A token bucket based rate-limiter.
  *
@@ -8,7 +6,7 @@ import Utill.Utilities;
  */
 public class RateLimiter implements Runnable {
 
-	private static final String MODULE_NAME = "RateLimiter";
+    private static final String MODULE_NAME = "RateLimiter";
     private static final int RATE_IN_MILLISECOND = 1000;
     private final TokenBucket tokenBucket;
     private final Long maxBytesPerSecond;
@@ -20,13 +18,13 @@ public class RateLimiter implements Runnable {
 
     @Override
     public void run() {
-    	// While token bucket is alive, add maxBytesPerSecond tokens each quanta of time
+        // While token bucket is alive, add maxBytesPerSecond tokens each quanta of time
         while (!tokenBucket.terminated()) {
             try {
                 Thread.sleep(RATE_IN_MILLISECOND);
                 tokenBucket.add(maxBytesPerSecond);
             } catch (InterruptedException e) {
-            	Utilities.Log(MODULE_NAME,"Interrupted Exception while sleep");
+                System.err.println( "Interrupted Exception while sleep");
             }
         }
     }

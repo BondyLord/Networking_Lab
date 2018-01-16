@@ -27,25 +27,25 @@ public class FileWriter implements Runnable {
         // create tempFile
         String tempFileName = downloadableMetadata.getFilename() + ".tmp";
         File tempFile = new File(tempFileName);
-        
+
         if (!tempFile.createNewFile()) {
             Utilities.Log(MODULE_NAME, "Temp file exists... ");
         }
-        
+
         RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile.getPath(), "rw");
         Utilities.Log(MODULE_NAME, "open RandomAccessFile for Writing to file: " + tempFileName);
 
         String metadataFilename = downloadableMetadata.getMetadataFilename();
         Utilities.Log(MODULE_NAME, "open FileOutputStream for Writing to file: " + metadataFilename);
-        
+
         // using downloadableMetadata object to get current downloaded percentage
         long fileSize = IdcDm.fileSize;
         double progressPercentage = (int) (((double) downloadableMetadata.get_sizeInBytes() / fileSize) * 100);
         try {
-        	// Write all available data till the end(represented by offset -1)
+            // Write all available data till the end(represented by offset -1)
             while (true) {
                 Chunk chunk = chunkQueue.take();
-                
+
                 // stopping while at end of data
                 if (chunk.getOffset() == -1) {
                     Utilities.Log(MODULE_NAME, "Exiting FileWriter thread, " +
@@ -59,11 +59,11 @@ public class FileWriter implements Runnable {
                 addDownloadedRange(chunk, chunkSize); // Add downloaded range in metadata object
                 updateMetadata(metadataFilename); // Update downloaded range in metadata file
             }
-            
+
             Thread.sleep(500);
             randomAccessFile.close();
         } catch (InterruptedException | IOException e) {
-            Utilities.Log(MODULE_NAME, "There was an exception while writing chunk data " + e.getMessage());
+            System.err.println( "There was an exception while writing chunk data " + e.getMessage());
         }
     }
 
@@ -102,11 +102,11 @@ public class FileWriter implements Runnable {
         long chunkOffset = chunk.getOffset();
         long chunkEndSet = chunkOffset + chunkSize;
         byte[] byteArray = chunk.getData();
-        
+
         randomAccessFile.seek(chunkOffset); // Seek the right data offset
         Utilities.Log(MODULE_NAME, "Writing chunk to file - chunk range - "
                 + chunkOffset + " - " + chunkEndSet);
-        
+
         // Write the given chunk data
         for (int i = 0; i < chunkSize; i++) {
             randomAccessFile.write(byteArray[i]);
@@ -121,7 +121,7 @@ public class FileWriter implements Runnable {
             try {
                 Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ex) {
-                Utilities.Log(MODULE_NAME, "Sorry! the file: " + tmpFile + " can't be renamed");
+                System.err.println( "Sorry! the file: " + tmpFile + " can't be renamed");
             }
         }
     }
@@ -131,12 +131,12 @@ public class FileWriter implements Runnable {
         double progressPercentageBefore = progressPercentage;
         progressPercentage += ((double) chunkSize / fileSize) * 100;
         int progressPercentageAfter = (int) progressPercentage;
-        
+
         // Check for a percentage change and update the user accordingly
         if ((Math.floor(progressPercentageBefore) != progressPercentageAfter) || progressPercentageBefore == 0.0) {
-            System.out.println("Downloaded " + progressPercentageAfter + "%");
+            System.err.println("Downloaded " + progressPercentageAfter + "%");
         }
-        
+
         return progressPercentage;
     }
 
@@ -145,7 +145,7 @@ public class FileWriter implements Runnable {
         try {
             this.writeChunks();
         } catch (IOException e) {
-            Utilities.Log(MODULE_NAME, "FileWriter error " + e.getMessage());
+            System.err.println( "FileWriter error " + e.getMessage());
         }
     }
 }

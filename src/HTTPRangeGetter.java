@@ -1,3 +1,4 @@
+
 import Utill.Utilities;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class HTTPRangeGetter implements Runnable {
         httpConnection.setRequestProperty("Range", rangRequestProperty);
         Utilities.Log(MODULE_NAME, "range request - " + rangRequestProperty);
         httpConnection.connect();
-        
+
         // Download the data in the given range
         downloadData(httpConnection, startRange);
     }
@@ -91,16 +92,18 @@ public class HTTPRangeGetter implements Runnable {
                     outQueue.put(chunk); // Put the data in the queue
                     offset += dataSize; // Change the next data offset
                 }
+            } else{
+                System.err.println("Unable to download data, Response code from server was - " + resCode);
             }
 
         } catch (Exception e) {
-            Utilities.Log(MODULE_NAME, "There was an exception during reading data from stream - " + e.getMessage());
+            System.err.println("There was an exception during reading data from stream - " + e.getMessage());
             throw (e);
         } finally {
             if (in != null) {
                 in.close();
             }
-            
+
             httpConnection.disconnect();
         }
     }
@@ -110,7 +113,7 @@ public class HTTPRangeGetter implements Runnable {
         try {
             this.downloadRange();
         } catch (IOException | InterruptedException e) {
-            Utilities.ErrorLog(MODULE_NAME, e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 }
